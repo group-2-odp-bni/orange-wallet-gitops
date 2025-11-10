@@ -1,0 +1,17 @@
+---
+# =============================================================================
+# Production Overlay - API Gateway
+# =============================================================================
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: orange-wallet
+
+resources:
+  - ../../base/api-gateway
+
+images:
+  - name: api-gateway
+    newName: docker.io/teukumunawar/orange-pay-api-gateway
+    newTag: latest  # CI/CD will update this with commit SHA

@@ -1,0 +1,235 @@
+---
+# =============================================================================
+# Transaction Service - Deployment
+# =============================================================================
+# Handles all transaction operations: transfers, top-ups, and transaction history.
+#
+# Dependencies:
+# - PostgreSQL (transaction_oltp schema)
+# - User Service (user validation)
+# - Wallet Service (balance checks)
+# - Authentication Service (JWT validation)
+# - Kafka (transaction events)
+# - BNI Virtual Account API (top-up integration)
+# =============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transaction-service
+  namespace: orange-wallet
+  labels:
+    app: transaction-service
+    component: backend
+    tier: application
+    version: v1
+spec:
+  replicas: 3  # Higher replica count for critical transaction service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+  selector:
+    matchLabels:
+      app: transaction-service
+      component: backend
+
+  template:
+    metadata:
+      labels:
+        app: transaction-service
+        component: backend
+        tier: application
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8084"
+        prometheus.io/path: "/actuator/prometheus"
+
+    spec:
+      nodeSelector:
+        workload-type: stateless
+
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+
+      containers:
+        - name: transaction-service
+          image: asia-southeast2-docker.pkg.dev/orange-wallet/orange-wallet-registry/transaction-service:latest
+          imagePullPolicy: Always
+
+          ports:
+            - name: http
+              containerPort: 8084
+              protocol: TCP
+
+          env:
+            # Application
+            - name: SERVER_PORT
+              value: "8084"
+
+            - name: SPRING_APPLICATION_NAME
+              value: "transaction-service"
+
+            - name: SPRING_PROFILES_ACTIVE
+              value: "prod"
+
+            # Database Connection
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-connection
+                  key: jdbc-url
+
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-connection
+                  key: username
+
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-connection
+                  key: password
+
+            # Flyway Schema
+            - name: SPRING_FLYWAY_SCHEMAS
+              value: "transaction_oltp"
+
+            - name: SPRING_FLYWAY_DEFAULT_SCHEMA
+              value: "transaction_oltp"
+
+            # HikariCP Pool Size (higher for transaction service)
+            - name: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
+              value: "15"
+
+            # OAuth2 / JWT Validation
+            - name: AUTH_SERVICE_JWK_URI
+              value: "http://authentication-service.orange-wallet.svc.cluster.local:8081/oauth2/jwks"
+
+            # Inter-Service URLs
+            - name: USER_SERVICE_URL
+              value: "http://user-service.orange-wallet.svc.cluster.local:8082"
+
+            - name: WALLET_SERVICE_URL
+              value: "http://wallet-service.orange-wallet.svc.cluster.local:8083"
+
+            - name: AUTH_SERVICE_URL
+              value: "http://authentication-service.orange-wallet.svc.cluster.local:8081"
+
+            # Kafka
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: kafka-config
+                  key: bootstrap-servers
+
+            # Transaction Configuration
+            - name: ORANGE_TRANSACTION_FEE_TRANSFER
+              valueFrom:
+                configMapKeyRef:
+                  name: transaction-service-config
+                  key: transaction.fee.transfer
+
+            - name: ORANGE_TRANSACTION_LIMIT_TRANSFER_MIN_AMOUNT
+              valueFrom:
+                configMapKeyRef:
+                  name: transaction-service-config
+                  key: transaction.limit.transfer.min-amount
+
+            - name: ORANGE_TRANSACTION_LIMIT_TRANSFER_MAX_AMOUNT
+              valueFrom:
+                configMapKeyRef:
+                  name: transaction-service-config
+                  key: transaction.limit.transfer.max-amount
+
+            # BNI Virtual Account Integration
+            - name: BNI_VA_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: transaction-service-config
+                  key: bni-va.base-url
+
+            - name: BNI_VA_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: external-api-keys
+                  key: bni-va-client-id
+
+            - name: BNI_VA_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: external-api-keys
+                  key: bni-va-client-secret
+
+            - name: BNI_VA_MOCK_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: transaction-service-config
+                  key: bni-va.mock-enabled
+
+            # JVM Options
+            - name: JAVA_OPTS
+              value: >-
+                -XX:+UseContainerSupport
+                -XX:MaxRAMPercentage=75.0
+                -XX:InitialRAMPercentage=50.0
+                -XX:+UseG1GC
+                -XX:MaxGCPauseMillis=200
+                -XX:+HeapDumpOnOutOfMemoryError
+                -XX:HeapDumpPath=/tmp/heapdump.hprof
+                -Duser.timezone=Asia/Jakarta
+
+          resources:
+            requests:
+              cpu: 500m
+              memory: 768Mi
+            limits:
+              cpu: 1500m
+              memory: 1536Mi
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8084
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8084
+            initialDelaySeconds: 60
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8084
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 15
+
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30

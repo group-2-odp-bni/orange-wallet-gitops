@@ -1,0 +1,212 @@
+---
+# =============================================================================
+# Wallet Service - Deployment
+# =============================================================================
+# Handles wallet operations, balance management, and wallet read model updates.
+#
+# Dependencies:
+# - PostgreSQL (wallet_oltp, wallet_read, infra schemas)
+# - Redis (caching)
+# - Kafka (event sourcing, CQRS read model updates)
+# - Authentication Service (JWT validation)
+# =============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wallet-service
+  namespace: orange-wallet
+  labels:
+    app: wallet-service
+    component: backend
+    tier: application
+    version: v1
+spec:
+  replicas: 3  # Critical service, higher replica count
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+  selector:
+    matchLabels:
+      app: wallet-service
+      component: backend
+
+  template:
+    metadata:
+      labels:
+        app: wallet-service
+        component: backend
+        tier: application
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8083"
+        prometheus.io/path: "/actuator/prometheus"
+
+    spec:
+      nodeSelector:
+        workload-type: stateless
+
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+
+      containers:
+        - name: wallet-service
+          image: asia-southeast2-docker.pkg.dev/orange-wallet/orange-wallet-registry/wallet-service:latest
+          imagePullPolicy: Always
+
+          ports:
+            - name: http
+              containerPort: 8083
+              protocol: TCP
+
+          env:
+            # Application
+            - name: SERVER_PORT
+              value: "8083"
+
+            - name: SPRING_APPLICATION_NAME
+              value: "wallet-service"
+
+            - name: SPRING_PROFILES_ACTIVE
+              value: "prod"
+
+            # Database Connection
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-connection
+                  key: jdbc-url
+
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-connection
+                  key: username
+
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-connection
+                  key: password
+
+            # Flyway Schemas
+            - name: SPRING_FLYWAY_SCHEMAS
+              value: "wallet_oltp,wallet_read,infra"
+
+            - name: SPRING_FLYWAY_DEFAULT_SCHEMA
+              value: "wallet_oltp"
+
+            # Redis Connection
+            - name: SPRING_DATA_REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: redis-connection
+                  key: host
+
+            - name: SPRING_DATA_REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: redis-connection
+                  key: port
+
+            - name: SPRING_DATA_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-connection
+                  key: password
+
+            # Kafka
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: kafka-config
+                  key: bootstrap-servers
+
+            - name: SPRING_KAFKA_ADMIN_AUTO_CREATE
+              value: "true"
+
+            # Kafka Consumer
+            - name: SPRING_KAFKA_CONSUMER_GROUP_ID
+              value: "wallet-read-updater"
+
+            - name: SPRING_KAFKA_LISTENER_CONCURRENCY
+              value: "2"
+
+            # OAuth2 / JWT Validation
+            - name: JWK_SET_URI
+              value: "http://authentication-service.orange-wallet.svc.cluster.local:8081/oauth2/jwks"
+
+            # Invite Secret
+            - name: INVITE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-config-secrets
+                  key: invite-secret
+                  optional: true
+
+            # JVM Options
+            - name: JAVA_OPTS
+              value: >-
+                -XX:+UseContainerSupport
+                -XX:MaxRAMPercentage=75.0
+                -XX:InitialRAMPercentage=50.0
+                -XX:+UseG1GC
+                -XX:MaxGCPauseMillis=200
+                -XX:+HeapDumpOnOutOfMemoryError
+                -XX:HeapDumpPath=/tmp/heapdump.hprof
+                -Duser.timezone=Asia/Jakarta
+
+          resources:
+            requests:
+              cpu: 500m
+              memory: 768Mi
+            limits:
+              cpu: 1500m
+              memory: 1536Mi
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8083
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8083
+            initialDelaySeconds: 60
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8083
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 15
+
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30

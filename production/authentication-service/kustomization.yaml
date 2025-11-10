@@ -1,0 +1,22 @@
+---
+# =============================================================================
+# Production Overlay - Authentication Service
+# =============================================================================
+# This overlay references the base manifests and allows image tag updates
+# by CI/CD pipeline. ArgoCD will monitor this file for changes.
+# =============================================================================
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: orange-wallet
+
+# Reference base manifests
+resources:
+  - ../../base/authentication-service
+
+# Image configuration (updated by CI/CD)
+images:
+  - name: authentication-service
+    newName: docker.io/teukumunawar/orange-pay-authentication-service
+    newTag: latest  # CI/CD will update this with commit SHA

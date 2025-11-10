@@ -1,0 +1,156 @@
+---
+# =============================================================================
+# Ingress - Orange Wallet API Gateway
+# =============================================================================
+# Routes external HTTP/HTTPS traffic to the API Gateway service.
+#
+# Architecture:
+#   Internet → NGINX Ingress Controller → API Gateway → Backend Services
+#
+# Access:
+#   - Production: https://api.orange-wallet.com
+#   - Dev: http://<MASTER_IP>:30080
+#
+# TLS:
+#   - Certificate managed by Cert-Manager
+#   - Let's Encrypt for production
+#   - Self-signed for development
+#
+# CORS:
+#   - Configured at API Gateway level (Spring Cloud Gateway)
+#   - Ingress passes through all headers
+# =============================================================================
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: orange-wallet-ingress
+  namespace: orange-wallet
+  labels:
+    app.kubernetes.io/name: orange-wallet-ingress
+    app.kubernetes.io/part-of: orange-wallet
+  annotations:
+    # NGINX Ingress specific annotations
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"  # Set to true in production with TLS
+
+    # Connection settings
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "90"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "90"
+
+    # Request size limits
+    nginx.ingress.kubernetes.io/proxy-body-size: "5m"
+
+    # Enable HTTP/2
+    nginx.ingress.kubernetes.io/http2-push-preload: "true"
+
+    # CORS (additional layer, API Gateway also handles CORS)
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"  # TODO: Restrict in production
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+
+    # Rate limiting (optional - uncomment for production)
+    # nginx.ingress.kubernetes.io/limit-rps: "100"
+    # nginx.ingress.kubernetes.io/limit-connections: "10"
+
+    # Cert-Manager annotations (for automatic TLS certificate)
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # cert-manager.io/acme-challenge-type: "http01"
+
+spec:
+  ingressClassName: nginx
+
+  # TLS configuration (uncomment for production)
+  # tls:
+  #   - hosts:
+  #       - api.orange-wallet.com
+  #     secretName: orange-wallet-tls
+
+  rules:
+    # Production rule (with domain)
+    # - host: api.orange-wallet.com
+    #   http:
+    #     paths:
+    #       - path: /
+    #         pathType: Prefix
+    #         backend:
+    #           service:
+    #             name: api-gateway
+    #             port:
+    #               number: 8080
+
+    # Development rule (without host - works with IP)
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 8080
+
+---
+# =============================================================================
+# Ingress - Direct Backend Access (Development Only)
+# =============================================================================
+# For development and debugging, allows direct access to backend services.
+# REMOVE THIS IN PRODUCTION - all traffic should go through API Gateway.
+# =============================================================================
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: orange-wallet-backend-dev
+  namespace: orange-wallet
+  labels:
+    app.kubernetes.io/name: orange-wallet-backend-dev
+    app.kubernetes.io/part-of: orange-wallet
+    environment: dev
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+
+spec:
+  ingressClassName: nginx
+
+  rules:
+    - http:
+        paths:
+          # Authentication Service
+          - path: /auth(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: authentication-service
+                port:
+                  number: 8081
+
+          # User Service
+          - path: /users(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: user-service
+                port:
+                  number: 8082
+
+          # Wallet Service
+          - path: /wallets(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: wallet-service
+                port:
+                  number: 8083
+
+          # Transaction Service
+          - path: /transactions(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: transaction-service
+                port:
+                  number: 8084

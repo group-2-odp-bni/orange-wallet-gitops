@@ -1,0 +1,17 @@
+---
+# =============================================================================
+# Production Overlay - Transaction Service
+# =============================================================================
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: orange-wallet
+
+resources:
+  - ../../base/transaction-service
+
+images:
+  - name: transaction-service
+    newName: docker.io/teukumunawar/orange-pay-transaction-service
+    newTag: latest  # CI/CD will update this with commit SHA

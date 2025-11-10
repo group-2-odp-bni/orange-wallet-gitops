@@ -1,0 +1,26 @@
+---
+# =============================================================================
+# Transaction Service - Service
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: transaction-service
+  namespace: orange-wallet
+  labels:
+    app: transaction-service
+    component: backend
+spec:
+  type: ClusterIP
+  selector:
+    app: transaction-service
+    component: backend
+
+  ports:
+    - name: http
+      port: 8084
+      targetPort: 8084
+      protocol: TCP
+
+  sessionAffinity: None

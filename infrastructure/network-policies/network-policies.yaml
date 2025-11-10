@@ -1,0 +1,388 @@
+---
+# =============================================================================
+# NetworkPolicy - Default Deny All
+# =============================================================================
+# Default policy: deny all ingress and egress traffic.
+# Other policies will explicitly allow required traffic.
+# =============================================================================
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: orange-wallet
+  labels:
+    app.kubernetes.io/name: default-deny-all
+    app.kubernetes.io/part-of: orange-wallet
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+
+---
+# =============================================================================
+# NetworkPolicy - Allow DNS
+# =============================================================================
+# Allow all pods to query CoreDNS for name resolution.
+# =============================================================================
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns
+  namespace: orange-wallet
+  labels:
+    app.kubernetes.io/name: allow-dns
+    app.kubernetes.io/part-of: orange-wallet
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+---
+# =============================================================================
+# NetworkPolicy - API Gateway Ingress
+# =============================================================================
+# Allow NGINX Ingress Controller to access API Gateway.
+# =============================================================================
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-gateway
+  namespace: orange-wallet
+  labels:
+    app.kubernetes.io/name: allow-ingress-to-gateway
+    app.kubernetes.io/part-of: orange-wallet
+spec:
+  podSelector:
+    matchLabels:
+      app: api-gateway
+      component: gateway
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: nginx-ingress
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8080
+
+---
+# =============================================================================
+# NetworkPolicy - API Gateway to Backend Services
+# =============================================================================
+# Allow API Gateway to communicate with all backend microservices.
+# =============================================================================
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-gateway-to-services
+  namespace: orange-wallet
+  labels:
+    app.kubernetes.io/name: allow-gateway-to-services
+    app.kubernetes.io/part-of: orange-wallet
+spec:
+  podSelector:
+    matchLabels:
+      app: api-gateway
+      component: gateway
+  policyTypes:
+    - Egress
+  egress:
+    # Allow to authentication-service
+    - to:
+        - podSelector:
+            matchLabels:
+              app: authentication-service
+              component: backend
+      ports:
+        - protocol: TCP
+          port: 8081
+
+    # Allow to user-service
+    - to:
+        - podSelector:
+            matchLabels:
+              app: user-service
+              component: backend
+      ports:
+        - protocol: TCP
+          port: 8082
+
+    # Allow to wallet-service
+    - to:
+        - podSelector:
+            matchLabels:
+              app: wallet-service
+              component: backend
+      ports:
+        - protocol: TCP
+          port: 8083
+
+    # Allow to transaction-service
+    - to:
+        - podSelector:
+            matchLabels:
+              app: transaction-service
+              component: backend
+      ports:
+        - protocol: TCP
+          port: 8084
+
+---
+# =============================================================================
+# NetworkPolicy - Backend Services Ingress
+# =============================================================================
+# Allow backend services to receive traffic from API Gateway.
+# =============================================================================
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-backend-from-gateway
+  namespace: orange-wallet
+  labels:
+    app.kubernetes.io/name: allow-backend-from-gateway
+    app.kubernetes.io/part-of: orange-wallet
+spec:
+  podSelector:
+    matchLabels:
+      component: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: api-gateway
+              component: gateway
+      ports:
+        - protocol: TCP
+          port: 8081  # authentication-service
+        - protocol: TCP
+          port: 8082  # user-service
+        - protocol: TCP
+          port: 8083  # wallet-service
+        - protocol: TCP
+          port: 8084  # transaction-service
+
+---
+# =============================================================================
+# NetworkPolicy - Inter-Service Communication
+# =============================================================================
+# Allow backend services to communicate with each other.
+# =============================================================================
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-inter-service
+  namespace: orange-wallet
+  labels:
+    app.kubernetes.io/name: allow-inter-service
+    app.kubernetes.io/part-of: orange-wallet
+spec:
+  podSelector:
+    matchLabels:
+      component: backend
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              component: backend
+      ports:
+        - protocol: TCP
+          port: 8081
+        - protocol: TCP
+          port: 8082
+        - protocol: TCP
+          port: 8083
+        - protocol: TCP
+          port: 8084
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              component: backend
+      ports:
+        - protocol: TCP
+          port: 8081
+        - protocol: TCP
+          port: 8082
+        - protocol: TCP
+          port: 8083
+        - protocol: TCP
+          port: 8084
+
+---
+# =============================================================================
+# NetworkPolicy - Database Access
+# =============================================================================
+# Allow backend services to access PostgreSQL and Redis.
+# =============================================================================
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-database-access
+  namespace: orange-wallet
+  labels:
+    app.kubernetes.io/name: allow-database-access
+    app.kubernetes.io/part-of: orange-wallet
+spec:
+  podSelector:
+    matchLabels:
+      component: backend
+  policyTypes:
+    - Egress
+  egress:
+    # Allow to PostgreSQL
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: database
+          podSelector:
+            matchLabels:
+              app: postgresql
+      ports:
+        - protocol: TCP
+          port: 5432
+
+    # Allow to Redis
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: database
+          podSelector:
+            matchLabels:
+              app: redis
+      ports:
+        - protocol: TCP
+          port: 6379
+
+---
+# =============================================================================
+# NetworkPolicy - Kafka Access
+# =============================================================================
+# Allow backend services to access Kafka.
+# =============================================================================
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-kafka-access
+  namespace: orange-wallet
+  labels:
+    app.kubernetes.io/name: allow-kafka-access
+    app.kubernetes.io/part-of: orange-wallet
+spec:
+  podSelector:
+    matchLabels:
+      component: backend
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: messaging
+          podSelector:
+            matchLabels:
+              app: kafka
+      ports:
+        - protocol: TCP
+          port: 9092
+
+---
+# =============================================================================
+# NetworkPolicy - External API Access
+# =============================================================================
+# Allow backend services to access external APIs (BNI VA, Firebase, GCP, etc.).
+# =============================================================================
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-external-apis
+  namespace: orange-wallet
+  labels:
+    app.kubernetes.io/name: allow-external-apis
+    app.kubernetes.io/part-of: orange-wallet
+spec:
+  podSelector:
+    matchLabels:
+      component: backend
+  policyTypes:
+    - Egress
+  egress:
+    # Allow HTTPS to external APIs
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+
+---
+# =============================================================================
+# NetworkPolicy - Prometheus Metrics Scraping
+# =============================================================================
+# Allow Prometheus to scrape metrics from all pods.
+# =============================================================================
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-prometheus-scraping
+  namespace: orange-wallet
+  labels:
+    app.kubernetes.io/name: allow-prometheus-scraping
+    app.kubernetes.io/part-of: orange-wallet
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: observability
+          podSelector:
+            matchLabels:
+              app: prometheus
+      ports:
+        - protocol: TCP
+          port: 8080  # api-gateway
+        - protocol: TCP
+          port: 8081  # authentication-service
+        - protocol: TCP
+          port: 8082  # user-service
+        - protocol: TCP
+          port: 8083  # wallet-service
+        - protocol: TCP
+          port: 8084  # transaction-service

@@ -1,0 +1,43 @@
+---
+# =============================================================================
+# Transaction Service - ConfigMap
+# =============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: transaction-service-config
+  namespace: orange-wallet
+  labels:
+    app: transaction-service
+    component: configuration
+data:
+  # Transaction Configuration
+  transaction.fee.transfer: "0"
+  transaction.reference.prefix: "TRX"
+  transaction.reference.date-format: "yyyyMMdd"
+
+  # Transaction Limits
+  transaction.limit.transfer.min-amount: "10000"
+  transaction.limit.transfer.max-amount: "10000000"
+
+  # BNI Virtual Account Integration
+  bni-va.base-url: "https://api-sandbox.bni.co.id"
+  bni-va.timeout: "30s"
+  bni-va.mock-enabled: "true"  # Set to false in production
+
+  # Kafka Topics - Transaction Events
+  kafka.topic.transaction-completed: "transaction.completed.v1"
+  kafka.topic.transaction-failed: "transaction.failed.v1"
+
+  # Kafka Topics - Top-Up Events
+  kafka.topic.topup-initiated: "orange-pay.topup.initiated.v1"
+  kafka.topic.topup-completed: "orange-pay.topup.completed.v1"
+  kafka.topic.topup-failed: "orange-pay.topup.failed.v1"
+  kafka.topic.topup-expired: "orange-pay.topup.expired.v1"
+  kafka.topic.topup-cancelled: "orange-pay.topup.cancelled.v1"
+
+  # Service Timeouts
+  service.user-service.timeout: "5000"
+  service.wallet-service.timeout: "5000"
+  service.authentication-service.timeout: "5000"

@@ -1,0 +1,99 @@
+---
+# =============================================================================
+# Authentication Service - ConfigMap
+# =============================================================================
+# Non-sensitive configuration for authentication service.
+# =============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentication-config
+  namespace: orange-wallet
+  labels:
+    app: authentication-service
+    component: configuration
+data:
+  # JWT Configuration
+  jwt.access-token-duration: "15m"
+  jwt.refresh-token-duration: "7d"
+  jwt.state-token-duration: "5m"
+
+  # Redis Prefixes
+  redis.prefix.otp: "otp:"
+  redis.prefix.otp-cooldown: "otp_cooldown:"
+  redis.prefix.otp-fail-count: "otp_fail_count:"
+  redis.prefix.otp-locked: "otp_locked:"
+  redis.prefix.pin-fail-count: "pin_fail_count:"
+  redis.prefix.pin-locked: "pin_locked:"
+  redis.prefix.jwt-blacklist: "jwt_blacklist:"
+  redis.prefix.state-token: "state_token:"
+
+  # Google reCAPTCHA
+  recaptcha.enabled: "false"
+  recaptcha.url: "https://www.google.com/recaptcha/api/siteverify"
+  recaptcha.score-threshold: "0.5"
+
+  # Kafka Topics
+  kafka.topic.otp-notification: "notification.otp.whatsapp"
+  kafka.topic.user-registered: "auth.user.registered"
+  kafka.topic.user-login: "user.login.events"
+
+---
+# =============================================================================
+# Authentication Service - RSA Keys ConfigMap
+# =============================================================================
+# RSA public and private keys for JWT token signing.
+#
+# IMPORTANT: These keys should be generated and stored securely.
+# For production, consider using Kubernetes secrets or external secret management.
+#
+# Generate RSA keys:
+#   openssl genrsa -out private.pem 2048
+#   openssl rsa -in private.pem -pubout -out public.pem
+# =============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentication-rsa-keys
+  namespace: orange-wallet
+  labels:
+    app: authentication-service
+    component: configuration
+data:
+  # TODO: Replace with actual RSA keys
+  # These are placeholder keys - generate real keys for production
+  public.pem: |
+    -----BEGIN PUBLIC KEY-----
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Z7vJfCKlZjJzKzRkZxB
+    [PLACEHOLDER - REPLACE WITH ACTUAL PUBLIC KEY]
+    -----END PUBLIC KEY-----
+
+  private.pem: |
+    -----BEGIN PRIVATE KEY-----
+    MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDRnu8l8IqVmMnM
+    [PLACEHOLDER - REPLACE WITH ACTUAL PRIVATE KEY]
+    -----END PRIVATE KEY-----
+
+---
+# =============================================================================
+# Kafka Configuration - Shared ConfigMap
+# =============================================================================
+# Shared Kafka configuration for all services.
+# =============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-config
+  namespace: orange-wallet
+  labels:
+    app.kubernetes.io/name: kafka-config
+    app.kubernetes.io/component: configuration
+data:
+  bootstrap-servers: "kafka.messaging.svc.cluster.local:9092"
+  consumer.group-id-prefix: "orange-wallet"
+  producer.acks: "1"
+  producer.retries: "3"
+  producer.compression-type: "snappy"

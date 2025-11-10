@@ -1,0 +1,28 @@
+---
+# =============================================================================
+# Authentication Service - Service
+# =============================================================================
+# ClusterIP service for internal communication and Ingress routing.
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: authentication-service
+  namespace: orange-wallet
+  labels:
+    app: authentication-service
+    component: backend
+spec:
+  type: ClusterIP
+  selector:
+    app: authentication-service
+    component: backend
+
+  ports:
+    - name: http
+      port: 8081
+      targetPort: 8081
+      protocol: TCP
+
+  sessionAffinity: None

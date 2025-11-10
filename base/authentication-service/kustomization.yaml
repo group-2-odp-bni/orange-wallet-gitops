@@ -1,0 +1,41 @@
+---
+# =============================================================================
+# Kustomization - Authentication Service
+# =============================================================================
+# Bundles all authentication service Kubernetes resources.
+#
+# Usage:
+#   kubectl apply -k infrastructure/kubernetes/applications/base/authentication-service/
+#
+# Or via ArgoCD Application manifest.
+# =============================================================================
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: orange-wallet
+
+# Common labels applied to all resources
+commonLabels:
+  app.kubernetes.io/name: authentication-service
+  app.kubernetes.io/part-of: orange-wallet
+  app.kubernetes.io/managed-by: kustomize
+
+# Resources to deploy
+resources:
+  - deployment.yaml
+  - service.yaml
+  - configmap.yaml
+  - hpa.yaml
+
+# Images - can be overridden in overlays
+images:
+  - name: authentication-service
+    newName: docker.io/teukumunawar/orange-pay-authentication-service
+    newTag: latest
+
+# ConfigMap generator for environment-specific values
+# configMapGenerator:
+#   - name: authentication-env
+#     literals:
+#       - ENVIRONMENT=production

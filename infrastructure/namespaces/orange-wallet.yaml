@@ -1,0 +1,15 @@
+---
+# =============================================================================
+# Namespace - Orange Wallet
+# =============================================================================
+# Main namespace for all Orange Wallet microservices
+# =============================================================================
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: orange-wallet
+  labels:
+    name: orange-wallet
+    app.kubernetes.io/part-of: orange-wallet
+    environment: production

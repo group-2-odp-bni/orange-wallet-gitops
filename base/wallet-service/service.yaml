@@ -1,0 +1,26 @@
+---
+# =============================================================================
+# Wallet Service - Service
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: wallet-service
+  namespace: orange-wallet
+  labels:
+    app: wallet-service
+    component: backend
+spec:
+  type: ClusterIP
+  selector:
+    app: wallet-service
+    component: backend
+
+  ports:
+    - name: http
+      port: 8083
+      targetPort: 8083
+      protocol: TCP
+
+  sessionAffinity: None

@@ -1,0 +1,40 @@
+---
+# =============================================================================
+# User Service - ConfigMap
+# =============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-service-config
+  namespace: orange-wallet
+  labels:
+    app: user-service
+    component: configuration
+data:
+  # GCP Cloud Storage Configuration
+  gcs.bucket-name: "orange-wallet-users-profiles"
+  gcs.project-id: "orange-wallet"
+  gcs.signed-url-duration: "60"
+
+  # Redis Prefixes
+  redis.prefix.otp-email: "otp:email:"
+  redis.prefix.otp-phone: "otp:phone:"
+  redis.prefix.otp-email-cooldown: "otp:email:cooldown:"
+  redis.prefix.otp-phone-cooldown: "otp:phone:cooldown:"
+  redis.prefix.otp-email-fail-count: "otp:email:fail:"
+  redis.prefix.otp-phone-fail-count: "otp:phone:fail:"
+  redis.prefix.otp-email-locked: "otp:email:locked:"
+  redis.prefix.otp-phone-locked: "otp:phone:locked:"
+
+  # Kafka Topics
+  kafka.topic.user-registered: "auth.user.registered"
+  kafka.topic.profile-email-verified: "user.profile.email-verified"
+  kafka.topic.profile-phone-verified: "user.profile.phone-verified"
+  kafka.topic.profile-name-updated: "user.profile.name-updated"
+  kafka.topic.otp-email-notification: "notification.otp.email"
+  kafka.topic.otp-whatsapp-notification: "notification.otp.whatsapp"
+
+  # File Upload Settings
+  spring.servlet.multipart.max-file-size: "2MB"
+  spring.servlet.multipart.max-request-size: "2MB"

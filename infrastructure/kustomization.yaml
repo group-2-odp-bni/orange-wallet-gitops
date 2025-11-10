@@ -1,0 +1,14 @@
+---
+# =============================================================================
+# Kustomization - Infrastructure
+# =============================================================================
+# Common infrastructure resources for Orange Wallet
+# =============================================================================
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespaces/orange-wallet.yaml
+  - ingress/ingress.yaml
+  - network-policies/network-policies.yaml

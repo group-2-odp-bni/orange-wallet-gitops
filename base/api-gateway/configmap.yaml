@@ -1,0 +1,37 @@
+---
+# =============================================================================
+# API Gateway - ConfigMap
+# =============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-gateway-config
+  namespace: orange-wallet
+  labels:
+    app: api-gateway
+    component: configuration
+data:
+  # Circuit Breaker Configuration
+  circuit-breaker.failure-rate-threshold: "50"
+  circuit-breaker.minimum-number-of-calls: "10"
+  circuit-breaker.sliding-window-type: "COUNT_BASED"
+  circuit-breaker.sliding-window-size: "10"
+  circuit-breaker.wait-duration: "10s"
+  circuit-breaker.permitted-calls-in-half-open: "3"
+
+  # Time Limiter Configuration
+  timelimiter.authentication-service.timeout: "15s"
+  timelimiter.user-service.timeout: "10s"
+  timelimiter.wallet-service.timeout: "10s"
+  timelimiter.transaction-service.timeout: "20s"
+
+  # Gateway HTTP Client Configuration
+  httpclient.connect-timeout: "10000"
+  httpclient.response-timeout: "60s"
+  httpclient.max-in-memory-size: "2MB"
+
+  # Server Configuration
+  server.http2.enabled: "true"
+  server.compression.enabled: "true"
+  server.compression.mime-types: "application/json,application/xml,text/html,text/xml,text/plain"
