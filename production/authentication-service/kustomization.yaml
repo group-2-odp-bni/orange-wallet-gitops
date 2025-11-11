@@ -18,5 +18,5 @@ resources:
 # Image configuration (updated by CI/CD)
 images:
   - name: authentication-service
-    newName: docker.io/teukumunawar/orange-pay-authentication-service
+    newName: docker.io/orangewallet/orange-pay-authentication-service
     newTag: latest  # CI/CD will update this with commit SHA

@@ -13,5 +13,5 @@ resources:
 
 images:
   - name: transaction-service
-    newName: docker.io/teukumunawar/orange-pay-transaction-service
+    newName: docker.io/orangewallet/orange-pay-transaction-service
     newTag: latest  # CI/CD will update this with commit SHA
