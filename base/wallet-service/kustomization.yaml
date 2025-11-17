@@ -15,8 +15,8 @@ resources:
   - hpa.yaml
 
 images:
-  - name: wallet-service
-    newName: docker.io/teukumunawar/orange-pay-wallet-service
+  - name: teukumunawar/orange-wallet-wallet-service
+    newName: docker.io/teukumunawar/orange-wallet-wallet-service
     newTag: latest
 
 labels:

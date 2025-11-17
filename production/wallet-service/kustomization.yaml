@@ -12,6 +12,6 @@ resources:
   - ../../base/wallet-service
 
 images:
-  - name: wallet-service
-    newName: docker.io/teukumunawar/orange-pay-wallet-service
+  - name: teukumunawar/orange-wallet-wallet-service
+    newName: docker.io/teukumunawar/orange-wallet-wallet-service
     newTag: latest  # CI/CD will update this with commit SHA

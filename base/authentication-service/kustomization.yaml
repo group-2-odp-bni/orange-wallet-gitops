@@ -24,8 +24,8 @@ resources:
 
 # Images - can be overridden in overlays
 images:
-  - name: authentication-service
-    newName: docker.io/teukumunawar/orange-pay-authentication-service
+  - name: teukumunawar/orange-wallet-authentication-service
+    newName: docker.io/teukumunawar/orange-wallet-authentication-service
     newTag: latest
 
 # Labels applied to all resources

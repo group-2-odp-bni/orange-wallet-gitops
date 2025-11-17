@@ -15,8 +15,8 @@ resources:
   - hpa.yaml
 
 images:
-  - name: api-gateway
-    newName: docker.io/teukumunawar/orange-pay-api-gateway
+  - name: teukumunawar/orange-wallet-api-gateway
+    newName: docker.io/teukumunawar/orange-wallet-api-gateway
     newTag: latest
 
 labels:

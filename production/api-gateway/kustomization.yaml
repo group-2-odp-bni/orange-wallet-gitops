@@ -12,6 +12,6 @@ resources:
   - ../../base/api-gateway
 
 images:
-  - name: api-gateway
-    newName: docker.io/teukumunawar/orange-pay-api-gateway
+  - name: teukumunawar/orange-wallet-api-gateway
+    newName: docker.io/teukumunawar/orange-wallet-api-gateway
     newTag: latest  # CI/CD will update this with commit SHA

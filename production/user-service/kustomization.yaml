@@ -12,6 +12,6 @@ resources:
   - ../../base/user-service
 
 images:
-  - name: user-service
-    newName: docker.io/teukumunawar/orange-pay-user-service
+  - name: teukumunawar/orange-wallet-user-service
+    newName: docker.io/teukumunawar/orange-wallet-user-service
     newTag: latest  # CI/CD will update this with commit SHA
