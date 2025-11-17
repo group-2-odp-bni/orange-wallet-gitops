@@ -109,7 +109,7 @@ spec:
       spec:
         accessModes:
           - ReadWriteOnce
-        storageClassName: standard
+        storageClassName: local-path
         resources:
           requests:
             storage: 10Gi
@@ -121,7 +121,7 @@ spec:
       spec:
         accessModes:
           - ReadWriteOnce
-        storageClassName: standard
+        storageClassName: local-path
         resources:
           requests:
             storage: 1Gi
