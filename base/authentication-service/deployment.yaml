@@ -83,6 +83,10 @@ spec:
             - name: SPRING_PROFILES_ACTIVE
               value: "prod"
 
+            # Spring Cloud Config
+            - name: SPRING_CONFIG_IMPORT
+              value: "configserver:http://cloud-config-server.orange-wallet.svc.cluster.local:8888"
+
             # Database Connection
             - name: DB_URL
               valueFrom:

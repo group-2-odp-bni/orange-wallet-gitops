@@ -1,0 +1,24 @@
+---
+# =============================================================================
+# Kustomization - ML Engine
+# =============================================================================
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: orange-wallet
+
+resources:
+  - deployment.yaml
+  - service.yaml
+
+images:
+  - name: teukumunawar/orange-wallet-ml-engine
+    newName: docker.io/teukumunawar/orange-wallet-ml-engine
+    newTag: latest
+
+labels:
+  - pairs:
+      app.kubernetes.io/name: ml-engine
+      app.kubernetes.io/part-of: orange-wallet
+      app.kubernetes.io/managed-by: kustomize

@@ -1,0 +1,17 @@
+---
+# =============================================================================
+# Production Overlay - ML Engine
+# =============================================================================
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: orange-wallet
+
+resources:
+  - ../../base/ml-engine
+
+images:
+  - name: teukumunawar/orange-wallet-ml-engine
+    newName: docker.io/teukumunawar/orange-wallet-ml-engine
+    newTag: latest  # CI/CD will update this with commit SHA

@@ -76,6 +76,10 @@ spec:
             - name: SPRING_PROFILES_ACTIVE
               value: "prod"
 
+            # Spring Cloud Config
+            - name: SPRING_CONFIG_IMPORT
+              value: "configserver:http://cloud-config-server.orange-wallet.svc.cluster.local:8888"
+
             # Database Connection
             - name: DB_URL
               valueFrom:
@@ -141,6 +145,10 @@ spec:
             # OAuth2 / JWT Validation
             - name: JWK_SET_URI
               value: "http://authentication-service.orange-wallet.svc.cluster.local:8081/oauth2/jwks"
+
+            # Internal Service URLs
+            - name: INTERNAL_USER_SERVICE_URL
+              value: "http://user-service.orange-wallet.svc.cluster.local:8082"
 
             # Invite Secret
             - name: INVITE_SECRET

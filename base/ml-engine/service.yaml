@@ -1,0 +1,24 @@
+---
+# =============================================================================
+# ML Engine - Service
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: ml-engine
+  namespace: orange-wallet
+  labels:
+    app: ml-engine
+    component: ml
+spec:
+  type: ClusterIP
+  selector:
+    app: ml-engine
+    component: ml
+  ports:
+    - name: http
+      port: 8086
+      targetPort: 8086
+      protocol: TCP
+  sessionAffinity: None

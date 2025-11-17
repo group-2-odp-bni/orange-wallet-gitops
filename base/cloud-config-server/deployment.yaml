@@ -1,0 +1,139 @@
+---
+# =============================================================================
+# Cloud Config Server - Deployment
+# =============================================================================
+# Centralized configuration management for all microservices.
+#
+# Dependencies:
+# - None (this is the first service to start)
+# =============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloud-config-server
+  namespace: orange-wallet
+  labels:
+    app: cloud-config-server
+    component: infrastructure
+    tier: config
+    version: v1
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+  selector:
+    matchLabels:
+      app: cloud-config-server
+      component: infrastructure
+
+  template:
+    metadata:
+      labels:
+        app: cloud-config-server
+        component: infrastructure
+        tier: config
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8888"
+        prometheus.io/path: "/actuator/prometheus"
+
+    spec:
+      nodeSelector:
+        workload-type: stateless
+
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+
+      containers:
+        - name: cloud-config-server
+          image: teukumunawar/orange-wallet-cloud-config-server:latest
+          imagePullPolicy: Always
+
+          ports:
+            - name: http
+              containerPort: 8888
+              protocol: TCP
+
+          env:
+            # Application
+            - name: SERVER_PORT
+              value: "8888"
+
+            - name: SPRING_APPLICATION_NAME
+              value: "cloud-config-server"
+
+            - name: SPRING_PROFILES_ACTIVE
+              value: "native"
+
+            # Cloud Config
+            - name: SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS
+              value: "classpath:/config"
+
+            # JVM Options
+            - name: JAVA_OPTS
+              value: >-
+                -XX:+UseContainerSupport
+                -XX:MaxRAMPercentage=75.0
+                -XX:InitialRAMPercentage=50.0
+                -XX:+UseG1GC
+                -XX:MaxGCPauseMillis=200
+                -XX:+HeapDumpOnOutOfMemoryError
+                -XX:HeapDumpPath=/tmp/heapdump.hprof
+                -Duser.timezone=Asia/Jakarta
+
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8888
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8888
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8888
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 12
+
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30

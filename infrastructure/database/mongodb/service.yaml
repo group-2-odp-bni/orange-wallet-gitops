@@ -1,0 +1,47 @@
+---
+# =============================================================================
+# MongoDB - Headless Service
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+  namespace: database
+  labels:
+    app: mongodb
+    component: database
+spec:
+  clusterIP: None
+  selector:
+    app: mongodb
+    component: database
+  ports:
+    - name: mongodb
+      port: 27017
+      targetPort: 27017
+      protocol: TCP
+
+---
+# =============================================================================
+# MongoDB - Client Service
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-client
+  namespace: database
+  labels:
+    app: mongodb
+    component: database
+spec:
+  type: ClusterIP
+  selector:
+    app: mongodb
+    component: database
+  ports:
+    - name: mongodb
+      port: 27017
+      targetPort: 27017
+      protocol: TCP

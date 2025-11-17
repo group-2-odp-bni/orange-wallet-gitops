@@ -1,12 +1,24 @@
+---
+# =============================================================================
+# Notification Worker - Deployment
+# =============================================================================
+# Handles WhatsApp notifications via WAHA and processes Kafka events
+#
+# Dependencies:
+# - Redis (caching)
+# - Kafka (event streaming)
+# - WAHA (WhatsApp API)
+# =============================================================================
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: api-gateway
+  name: notification-worker
   namespace: orange-wallet
   labels:
-    app: api-gateway
-    component: gateway
-    tier: edge
+    app: notification-worker
+    component: worker
+    tier: application
     version: v1
 spec:
   replicas: 2
@@ -18,19 +30,19 @@ spec:
 
   selector:
     matchLabels:
-      app: api-gateway
-      component: gateway
+      app: notification-worker
+      component: worker
 
   template:
     metadata:
       labels:
-        app: api-gateway
-        component: gateway
-        tier: edge
+        app: notification-worker
+        component: worker
+        tier: application
         version: v1
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/port: "8080"
+        prometheus.io/port: "8085"
         prometheus.io/path: "/actuator/prometheus"
 
     spec:
@@ -43,22 +55,22 @@ spec:
         fsGroup: 1000
 
       containers:
-        - name: api-gateway
-          image: teukumunawar/orange-wallet-api-gateway:latest
+        - name: notification-worker
+          image: teukumunawar/orange-wallet-notification-worker:latest
           imagePullPolicy: Always
 
           ports:
             - name: http
-              containerPort: 8080
+              containerPort: 8085
               protocol: TCP
 
           env:
             # Application
             - name: SERVER_PORT
-              value: "8080"
+              value: "8085"
 
             - name: SPRING_APPLICATION_NAME
-              value: "api-gateway"
+              value: "notification-worker"
 
             - name: SPRING_PROFILES_ACTIVE
               value: "prod"
@@ -67,61 +79,34 @@ spec:
             - name: SPRING_CONFIG_IMPORT
               value: "configserver:http://cloud-config-server.orange-wallet.svc.cluster.local:8888"
 
-            # Backend Service URLs
-            - name: AUTHENTICATION_SERVICE_URL
-              value: "http://authentication-service.orange-wallet.svc.cluster.local:8081"
-
-            - name: USER_SERVICE_URL
-              value: "http://user-service.orange-wallet.svc.cluster.local:8082"
-
-            - name: WALLET_SERVICE_URL
-              value: "http://wallet-service.orange-wallet.svc.cluster.local:8083"
-
-            - name: TRANSACTION_SERVICE_URL
-              value: "http://transaction-service.orange-wallet.svc.cluster.local:8084"
-
-            # Redis Configuration
+            # Redis Connection
             - name: REDIS_HOST
               value: "redis-client.database.svc.cluster.local"
 
-            # Gateway Configuration
-            - name: SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_HTTPCLIENT_CONNECT_TIMEOUT
-              value: "10000"
+            - name: REDIS_PORT
+              value: "6379"
 
-            - name: SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_HTTPCLIENT_RESPONSE_TIMEOUT
-              value: "60s"
+            # Kafka
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka-client.messaging.svc.cluster.local:9092"
 
-            - name: SPRING_HTTP_CODECS_MAX_IN_MEMORY_SIZE
-              value: "2MB"
+            # WAHA Configuration
+            - name: WAHA_BASE_URL
+              value: "http://waha.messaging.svc.cluster.local:3000"
 
-            # HTTP/2 and Compression
-            - name: SERVER_HTTP2_ENABLED
-              value: "true"
-
-            - name: SERVER_COMPRESSION_ENABLED
-              value: "true"
-
-            # Security Configuration
-            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
+            - name: WAHA_API_KEY
               valueFrom:
-                configMapKeyRef:
-                  name: api-gateway-config
-                  key: jwt.jwk-set-uri
+                secretKeyRef:
+                  name: external-api-keys
+                  key: waha-api-key
 
-            # Circuit Breaker Configuration (from configmap)
-            - name: RESILIENCE4J_CIRCUITBREAKER_CONFIGS_DEFAULT_FAILURE_RATE_THRESHOLD
+            - name: WAHA_WEBHOOK_HMAC_SECRET
               valueFrom:
-                configMapKeyRef:
-                  name: api-gateway-config
-                  key: circuit-breaker.failure-rate-threshold
+                secretKeyRef:
+                  name: external-api-keys
+                  key: waha-webhook-hmac-secret
 
-            - name: RESILIENCE4J_CIRCUITBREAKER_CONFIGS_DEFAULT_WAIT_DURATION_IN_OPEN_STATE
-              valueFrom:
-                configMapKeyRef:
-                  name: api-gateway-config
-                  key: circuit-breaker.wait-duration
-
-            # JVM Options (Gateway uses WebFlux - different tuning)
+            # JVM Options
             - name: JAVA_OPTS
               value: >-
                 -XX:+UseContainerSupport
@@ -132,20 +117,19 @@ spec:
                 -XX:+HeapDumpOnOutOfMemoryError
                 -XX:HeapDumpPath=/tmp/heapdump.hprof
                 -Duser.timezone=Asia/Jakarta
-                -Dreactor.netty.ioWorkerCount=4
 
           resources:
             requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
               cpu: 500m
               memory: 512Mi
-            limits:
-              cpu: 1000m
-              memory: 1Gi
 
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
-              port: 8080
+              port: 8085
             initialDelaySeconds: 60
             periodSeconds: 10
             timeoutSeconds: 5
@@ -155,7 +139,7 @@ spec:
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
-              port: 8080
+              port: 8085
             initialDelaySeconds: 45
             periodSeconds: 5
             timeoutSeconds: 3
@@ -165,7 +149,7 @@ spec:
           startupProbe:
             httpGet:
               path: /actuator/health/liveness
-              port: 8080
+              port: 8085
             initialDelaySeconds: 20
             periodSeconds: 10
             timeoutSeconds: 5

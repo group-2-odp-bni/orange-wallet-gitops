@@ -1,0 +1,24 @@
+---
+# =============================================================================
+# Notification Worker - Service
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-worker
+  namespace: orange-wallet
+  labels:
+    app: notification-worker
+    component: worker
+spec:
+  type: ClusterIP
+  selector:
+    app: notification-worker
+    component: worker
+  ports:
+    - name: http
+      port: 8085
+      targetPort: 8085
+      protocol: TCP
+  sessionAffinity: None

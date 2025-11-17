@@ -1,0 +1,24 @@
+---
+# =============================================================================
+# Cloud Config Server - Service
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloud-config-server
+  namespace: orange-wallet
+  labels:
+    app: cloud-config-server
+    component: infrastructure
+spec:
+  type: ClusterIP
+  selector:
+    app: cloud-config-server
+    component: infrastructure
+  ports:
+    - name: http
+      port: 8888
+      targetPort: 8888
+      protocol: TCP
+  sessionAffinity: None
