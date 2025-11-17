@@ -71,11 +71,17 @@ spec:
               value: "cloud-config-server"
 
             - name: SPRING_PROFILES_ACTIVE
-              value: "native"
+              value: "git"
 
-            # Cloud Config
-            - name: SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS
-              value: "classpath:/config"
+            # Git Repository Configuration
+            - name: SPRING_CLOUD_CONFIG_SERVER_GIT_URI
+              value: "https://github.com/group-2-odp-bni/spring-cloud-configmap.git"
+
+            - name: SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL
+              value: "main"
+
+            - name: SPRING_CLOUD_CONFIG_SERVER_GIT_CLONE_ON_START
+              value: "true"
 
             # JVM Options
             - name: JAVA_OPTS
