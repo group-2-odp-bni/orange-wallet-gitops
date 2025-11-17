@@ -139,7 +139,7 @@ spec:
           app: redis
       spec:
         accessModes: ["ReadWriteOnce"]
-        storageClassName: standard-rwo
+        storageClassName: local-path  # K3s local storage
         resources:
           requests:
             storage: 10Gi

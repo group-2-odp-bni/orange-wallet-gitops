@@ -167,7 +167,7 @@ spec:
           app: postgresql
       spec:
         accessModes: ["ReadWriteOnce"]
-        storageClassName: standard-rwo  # GCP persistent disk
+        storageClassName: local-path  # K3s local storage
         resources:
           requests:
             storage: 30Gi
