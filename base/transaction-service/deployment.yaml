@@ -59,7 +59,7 @@ spec:
 
       containers:
         - name: transaction-service
-          image: asia-southeast2-docker.pkg.dev/orange-wallet/orange-wallet-registry/transaction-service:latest
+          image: teukumunawar/orange-wallet-transaction-service:latest
           imagePullPolicy: Always
 
           ports:

@@ -44,7 +44,7 @@ spec:
 
       containers:
         - name: api-gateway
-          image: asia-southeast2-docker.pkg.dev/orange-wallet/orange-wallet-registry/api-gateway:latest
+          image: teukumunawar/orange-wallet-api-gateway:latest
           imagePullPolicy: Always
 
           ports:

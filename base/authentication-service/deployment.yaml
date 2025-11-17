@@ -64,7 +64,7 @@ spec:
 
       containers:
         - name: authentication-service
-          image: asia-southeast2-docker.pkg.dev/orange-wallet/orange-wallet-registry/authentication-service:latest
+          image: teukumunawar/orange-wallet-authentication-service:latest
           imagePullPolicy: Always
 
           ports:

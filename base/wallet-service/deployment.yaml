@@ -57,7 +57,7 @@ spec:
 
       containers:
         - name: wallet-service
-          image: asia-southeast2-docker.pkg.dev/orange-wallet/orange-wallet-registry/wallet-service:latest
+          image: teukumunawar/orange-wallet-wallet-service:latest
           imagePullPolicy: Always
 
           ports:
