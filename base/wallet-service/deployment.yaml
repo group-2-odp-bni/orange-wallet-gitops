@@ -22,7 +22,7 @@ metadata:
     tier: application
     version: v1
 spec:
-  replicas: 3  # Critical service, higher replica count
+  replicas: 2  # Reduced for resource constraints
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -172,11 +172,11 @@ spec:
 
           resources:
             requests:
-              cpu: 200m
-              memory: 768Mi
+              cpu: 100m
+              memory: 512Mi
             limits:
-              cpu: 1500m
-              memory: 1536Mi
+              cpu: 750m
+              memory: 1Gi
 
           livenessProbe:
             httpGet:
