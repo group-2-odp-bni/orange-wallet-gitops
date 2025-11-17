@@ -31,9 +31,12 @@ data:
     databases 16
 
     # Snapshotting (persistence)
-    save 900 1      # Save after 900s if 1 key changed
-    save 300 10     # Save after 300s if 10 keys changed
-    save 60 10000   # Save after 60s if 10000 keys changed
+    # Save after 900s if 1 key changed
+    save 900 1
+    # Save after 300s if 10 keys changed
+    save 300 10
+    # Save after 60s if 10000 keys changed
+    save 60 10000
     stop-writes-on-bgsave-error yes
     rdbcompression yes
     rdbchecksum yes
