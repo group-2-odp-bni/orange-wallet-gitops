@@ -15,12 +15,6 @@ kind: Kustomization
 
 namespace: orange-wallet
 
-# Common labels applied to all resources
-commonLabels:
-  app.kubernetes.io/name: authentication-service
-  app.kubernetes.io/part-of: orange-wallet
-  app.kubernetes.io/managed-by: kustomize
-
 # Resources to deploy
 resources:
   - deployment.yaml
@@ -33,6 +27,13 @@ images:
   - name: authentication-service
     newName: docker.io/teukumunawar/orange-pay-authentication-service
     newTag: latest
+
+# Labels applied to all resources
+labels:
+  - pairs:
+      app.kubernetes.io/name: authentication-service
+      app.kubernetes.io/part-of: orange-wallet
+      app.kubernetes.io/managed-by: kustomize
 
 # ConfigMap generator for environment-specific values
 # configMapGenerator:

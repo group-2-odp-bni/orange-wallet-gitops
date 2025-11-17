@@ -8,11 +8,6 @@ kind: Kustomization
 
 namespace: orange-wallet
 
-commonLabels:
-  app.kubernetes.io/name: wallet-service
-  app.kubernetes.io/part-of: orange-wallet
-  app.kubernetes.io/managed-by: kustomize
-
 resources:
   - deployment.yaml
   - service.yaml
@@ -23,3 +18,9 @@ images:
   - name: wallet-service
     newName: docker.io/teukumunawar/orange-pay-wallet-service
     newTag: latest
+
+labels:
+  - pairs:
+      app.kubernetes.io/name: wallet-service
+      app.kubernetes.io/part-of: orange-wallet
+      app.kubernetes.io/managed-by: kustomize

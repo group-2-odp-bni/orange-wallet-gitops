@@ -32,7 +32,10 @@ metadata:
   annotations:
     # NGINX Ingress specific annotations
     nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"  # Set to true in production with TLS
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"  # Redirect HTTP to HTTPS
+
+    # Force HTTPS (additional security)
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
 
     # Connection settings
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
@@ -45,43 +48,79 @@ metadata:
     # Enable HTTP/2
     nginx.ingress.kubernetes.io/http2-push-preload: "true"
 
+    # HSTS (HTTP Strict Transport Security) for production
+    nginx.ingress.kubernetes.io/hsts: "true"
+    nginx.ingress.kubernetes.io/hsts-max-age: "31536000"  # 1 year
+    nginx.ingress.kubernetes.io/hsts-include-subdomains: "true"
+    nginx.ingress.kubernetes.io/hsts-preload: "true"
+
     # CORS (additional layer, API Gateway also handles CORS)
+    # Restricted to specific origins for production security
     nginx.ingress.kubernetes.io/enable-cors: "true"
-    nginx.ingress.kubernetes.io/cors-allow-origin: "*"  # TODO: Restrict in production
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://orange-wallet.com, https://www.orange-wallet.com, https://app.orange-wallet.com"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, PATCH, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
 
-    # Rate limiting (optional - uncomment for production)
-    # nginx.ingress.kubernetes.io/limit-rps: "100"
-    # nginx.ingress.kubernetes.io/limit-connections: "10"
+    # Rate limiting (production security)
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+    nginx.ingress.kubernetes.io/limit-rpm: "1000"
+    nginx.ingress.kubernetes.io/limit-connections: "50"
 
     # Cert-Manager annotations (for automatic TLS certificate)
-    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    # cert-manager.io/acme-challenge-type: "http01"
+    cert-manager.io/cluster-issuer: "letsencrypt-staging"  # Switch to 'letsencrypt-prod' after testing
+    cert-manager.io/acme-challenge-type: "http01"
 
 spec:
   ingressClassName: nginx
 
-  # TLS configuration (uncomment for production)
-  # tls:
-  #   - hosts:
-  #       - api.orange-wallet.com
-  #     secretName: orange-wallet-tls
+  # TLS configuration
+  tls:
+    - hosts:
+        - api.orange-wallet.com
+        - orange-wallet.com
+        - www.orange-wallet.com
+      secretName: orange-wallet-tls-secret  # Managed by Cert-Manager
 
   rules:
-    # Production rule (with domain)
-    # - host: api.orange-wallet.com
-    #   http:
-    #     paths:
-    #       - path: /
-    #         pathType: Prefix
-    #         backend:
-    #           service:
-    #             name: api-gateway
-    #             port:
-    #               number: 8080
+    # Production rule with domain (TLS-enabled)
+    - host: api.orange-wallet.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 8080
 
-    # Development rule (without host - works with IP)
+    # Redirect root domain to API subdomain
+    - host: orange-wallet.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 8080
+
+    # WWW subdomain (redirects to api.orange-wallet.com)
+    - host: www.orange-wallet.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 8080
+
+    # Fallback rule for IP-based access (development/testing)
+    # Note: TLS will show certificate error when accessing via IP
     - http:
         paths:
           - path: /

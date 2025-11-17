@@ -1,10 +1,3 @@
----
-# =============================================================================
-# API Gateway - HorizontalPodAutoscaler
-# =============================================================================
-# Gateway is the entry point - needs aggressive scaling for traffic spikes.
-# =============================================================================
-
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -19,7 +12,7 @@ spec:
     kind: Deployment
     name: api-gateway
 
-  minReplicas: 3
+  minReplicas: 2
   maxReplicas: 12
 
   metrics:
@@ -50,7 +43,7 @@ spec:
       selectPolicy: Min
 
     scaleUp:
-      stabilizationWindowSeconds: 15  # Very fast scale-up for traffic spikes
+      stabilizationWindowSeconds: 15
       policies:
         - type: Percent
           value: 100

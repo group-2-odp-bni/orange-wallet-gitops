@@ -1,21 +1,3 @@
----
-# =============================================================================
-# ArgoCD App of Apps - Orange Wallet
-# =============================================================================
-# This is the root Application that manages all child applications.
-# Deploy this single app to automatically deploy all microservices.
-#
-# Usage:
-#   kubectl apply -f argocd/app-of-apps.yaml
-#
-# This will create:
-# - authentication-service
-# - user-service
-# - transaction-service
-# - wallet-service
-# - api-gateway
-# =============================================================================
-
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

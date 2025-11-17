@@ -1,0 +1,118 @@
+---
+# =============================================================================
+# ClusterIssuer - Let's Encrypt Staging
+# =============================================================================
+# For testing TLS certificate issuance without hitting rate limits.
+# Use this first to verify everything works before switching to production.
+#
+# Rate Limits (Staging): Very high, suitable for testing
+# Certificate Validity: Valid but shows "Fake LE Intermediate X1" warning
+# =============================================================================
+
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+  labels:
+    app.kubernetes.io/name: letsencrypt-staging
+    app.kubernetes.io/part-of: cert-manager
+spec:
+  acme:
+    # Let's Encrypt Staging API
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+
+    # Email for certificate expiry notifications
+    email: admin@orange-wallet.com  # TODO: Replace with real email
+
+    # Secret to store ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-staging-account-key
+
+    # Solvers for ACME challenges
+    solvers:
+    # HTTP-01 challenge via NGINX Ingress
+    - http01:
+        ingress:
+          class: nginx
+          podTemplate:
+            metadata:
+              labels:
+                app: cert-manager-acme-http-solver
+            spec:
+              # Run on stateless workers only
+              nodeSelector:
+                workload-type: stateless
+
+---
+# =============================================================================
+# ClusterIssuer - Let's Encrypt Production
+# =============================================================================
+# For production use after testing with staging issuer.
+#
+# Rate Limits (Production):
+#   - 50 certificates per registered domain per week
+#   - 5 duplicate certificates per week
+#   - 300 new orders per account per 3 hours
+#
+# IMPORTANT: Test with staging issuer first to avoid hitting rate limits!
+# =============================================================================
+
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+  labels:
+    app.kubernetes.io/name: letsencrypt-prod
+    app.kubernetes.io/part-of: cert-manager
+spec:
+  acme:
+    # Let's Encrypt Production API
+    server: https://acme-v02.api.letsencrypt.org/directory
+
+    # Email for certificate expiry notifications
+    # Let's Encrypt will send renewal reminders to this email
+    email: admin@orange-wallet.com  # TODO: Replace with real email
+
+    # Secret to store ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-prod-account-key
+
+    # Solvers for ACME challenges
+    solvers:
+    # HTTP-01 challenge via NGINX Ingress
+    - http01:
+        ingress:
+          class: nginx
+          podTemplate:
+            metadata:
+              labels:
+                app: cert-manager-acme-http-solver
+            spec:
+              # Run on stateless workers only
+              nodeSelector:
+                workload-type: stateless
+              # Security context
+              securityContext:
+                runAsNonRoot: true
+                runAsUser: 1000
+                fsGroup: 1000
+
+---
+# =============================================================================
+# ClusterIssuer - Self-Signed (For Development/Testing)
+# =============================================================================
+# Creates self-signed certificates for development environments.
+# No external dependencies, instant certificate generation.
+#
+# Use Case: Local testing, CI/CD pipelines, development environments
+# =============================================================================
+
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned-issuer
+  labels:
+    app.kubernetes.io/name: selfsigned-issuer
+    app.kubernetes.io/part-of: cert-manager
+spec:
+  selfSigned: {}
