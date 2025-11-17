@@ -106,6 +106,19 @@ spec:
                   name: postgres-connection
                   key: password
 
+            # Spring Datasource (explicit for Spring Boot property injection)
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-connection
+                  key: username
+
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-connection
+                  key: password
+
             # Flyway Schema
             - name: SPRING_FLYWAY_SCHEMAS
               value: "auth_oltp"
