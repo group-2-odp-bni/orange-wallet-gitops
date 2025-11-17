@@ -30,6 +30,12 @@ spec:
       nodeSelector:
         workload-type: stateful
 
+      tolerations:
+        - key: "stateful"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
+
       securityContext:
         fsGroup: 999
         runAsUser: 999
