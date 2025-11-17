@@ -1,0 +1,59 @@
+---
+# =============================================================================
+# PostgreSQL - Headless Service
+# =============================================================================
+# Headless service for stable DNS names in StatefulSet
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresql
+  namespace: database
+  labels:
+    app: postgresql
+    component: database
+spec:
+  type: ClusterIP
+  clusterIP: None  # Headless service for StatefulSet
+  selector:
+    app: postgresql
+    component: database
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+      protocol: TCP
+
+---
+# =============================================================================
+# PostgreSQL - Client Service (Non-Headless)
+# =============================================================================
+# Regular service for application connections
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresql-client
+  namespace: database
+  labels:
+    app: postgresql
+    component: database
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9187"
+spec:
+  type: ClusterIP
+  selector:
+    app: postgresql
+    component: database
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+      protocol: TCP
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 3600

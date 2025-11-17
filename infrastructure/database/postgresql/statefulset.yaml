@@ -1,0 +1,173 @@
+---
+# =============================================================================
+# PostgreSQL 16 - StatefulSet
+# =============================================================================
+# Production-ready PostgreSQL deployment with:
+# - Persistent storage
+# - Health checks
+# - Resource limits
+# - Runs on stateful node only
+# =============================================================================
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgresql
+  namespace: database
+  labels:
+    app: postgresql
+    component: database
+    version: "16"
+spec:
+  serviceName: postgresql
+  replicas: 1  # Single instance (HA-ready for future)
+  selector:
+    matchLabels:
+      app: postgresql
+      component: database
+
+  template:
+    metadata:
+      labels:
+        app: postgresql
+        component: database
+        version: "16"
+
+    spec:
+      # Run on stateful worker node only
+      tolerations:
+        - key: "stateful"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
+
+      nodeSelector:
+        workload-type: stateful
+
+      # Use high priority for database
+      priorityClassName: database-high
+
+      # Security context
+      securityContext:
+        fsGroup: 999  # postgres user
+        runAsUser: 999
+        runAsNonRoot: true
+
+      containers:
+        - name: postgresql
+          image: postgres:16-alpine
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - name: postgres
+              containerPort: 5432
+              protocol: TCP
+
+          env:
+            # Database configuration
+            - name: POSTGRES_DB
+              value: "orange_wallet_db"
+
+            - name: POSTGRES_USER
+              value: "postgres"
+
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: password
+
+            # Performance tuning
+            - name: POSTGRES_INITDB_ARGS
+              value: "--encoding=UTF8 --locale=en_US.UTF-8"
+
+            # Shared buffers (25% of RAM)
+            - name: POSTGRES_SHARED_BUFFERS
+              value: "512MB"
+
+            # Effective cache size (50% of RAM)
+            - name: POSTGRES_EFFECTIVE_CACHE_SIZE
+              value: "1GB"
+
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+
+          # Resource allocation
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+
+          # Health checks
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U postgres
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U postgres
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          # Startup probe for slow starts
+          startupProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U postgres
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30  # 5 minutes to start
+
+          # Volume mounts
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+
+            - name: postgres-config
+              mountPath: /etc/postgresql/postgresql.conf
+              subPath: postgresql.conf
+              readOnly: true
+
+            - name: postgres-init
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+
+      volumes:
+        - name: postgres-config
+          configMap:
+            name: postgresql-config
+
+        - name: postgres-init
+          configMap:
+            name: postgresql-init
+
+  # Persistent volume claim template
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+        labels:
+          app: postgresql
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: standard-rwo  # GCP persistent disk
+        resources:
+          requests:
+            storage: 30Gi

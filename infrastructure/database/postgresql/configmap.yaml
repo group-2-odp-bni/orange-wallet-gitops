@@ -1,0 +1,128 @@
+---
+# =============================================================================
+# PostgreSQL - Configuration
+# =============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgresql-config
+  namespace: database
+  labels:
+    app: postgresql
+data:
+  postgresql.conf: |
+    # PostgreSQL Configuration - Optimized for 2GB RAM
+
+    # Connection Settings
+    max_connections = 100
+    superuser_reserved_connections = 3
+
+    # Memory Settings
+    shared_buffers = 512MB              # 25% of RAM
+    effective_cache_size = 1GB          # 50% of RAM
+    work_mem = 10MB                     # RAM / max_connections / 4
+    maintenance_work_mem = 128MB
+
+    # Write Ahead Log (WAL)
+    wal_level = replica
+    wal_buffers = 16MB
+    max_wal_size = 1GB
+    min_wal_size = 80MB
+    checkpoint_completion_target = 0.9
+
+    # Query Planner
+    random_page_cost = 1.1              # For SSD
+    effective_io_concurrency = 200      # For SSD
+
+    # Logging
+    logging_collector = on
+    log_directory = 'log'
+    log_filename = 'postgresql-%Y-%m-%d.log'
+    log_rotation_age = 1d
+    log_rotation_size = 100MB
+    log_min_duration_statement = 1000   # Log queries > 1s
+    log_line_prefix = '%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h '
+    log_checkpoints = on
+    log_connections = on
+    log_disconnections = on
+    log_lock_waits = on
+    log_temp_files = 0
+
+    # Statistics
+    shared_preload_libraries = 'pg_stat_statements'
+    pg_stat_statements.max = 10000
+    pg_stat_statements.track = all
+    track_activities = on
+    track_counts = on
+    track_io_timing = on
+
+    # Autovacuum
+    autovacuum = on
+    autovacuum_max_workers = 3
+    autovacuum_naptime = 1min
+
+    # Locale
+    lc_messages = 'en_US.UTF-8'
+    lc_monetary = 'en_US.UTF-8'
+    lc_numeric = 'en_US.UTF-8'
+    lc_time = 'en_US.UTF-8'
+
+    # Default timezone
+    timezone = 'Asia/Jakarta'
+
+---
+# =============================================================================
+# PostgreSQL - Initialization Scripts
+# =============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgresql-init
+  namespace: database
+  labels:
+    app: postgresql
+data:
+  01-create-databases.sql: |
+    -- Orange Wallet Databases
+
+    -- Main application database (already created via POSTGRES_DB)
+    -- CREATE DATABASE orange_wallet_db;
+
+    -- Create application user
+    CREATE USER orange_wallet WITH PASSWORD 'CHANGE_ME';
+
+    -- Grant privileges
+    GRANT ALL PRIVILEGES ON DATABASE orange_wallet_db TO orange_wallet;
+
+    -- Connect to database
+    \c orange_wallet_db
+
+    -- Create extensions
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+    CREATE EXTENSION IF NOT EXISTS "pg_stat_statements";
+    CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+    -- Grant schema privileges
+    GRANT ALL ON SCHEMA public TO orange_wallet;
+
+    COMMENT ON DATABASE orange_wallet_db IS 'Orange Wallet main application database';
+
+  02-performance-tuning.sql: |
+    -- Performance Tuning
+
+    \c orange_wallet_db
+
+    -- Enable statement statistics
+    ALTER SYSTEM SET shared_preload_libraries = 'pg_stat_statements';
+
+    -- Create monitoring user (readonly)
+    CREATE USER monitoring WITH PASSWORD 'CHANGE_ME';
+    GRANT pg_monitor TO monitoring;
+    GRANT CONNECT ON DATABASE orange_wallet_db TO monitoring;
+
+    \c orange_wallet_db
+    GRANT USAGE ON SCHEMA public TO monitoring;
+    GRANT SELECT ON ALL TABLES IN SCHEMA public TO monitoring;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO monitoring;

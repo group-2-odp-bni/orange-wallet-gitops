@@ -1,0 +1,160 @@
+---
+# =============================================================================
+# PostgreSQL Backup - CronJob
+# =============================================================================
+# Daily backups to GCS bucket
+# Schedule: Every day at 2 AM Jakarta time
+# =============================================================================
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgresql-backup
+  namespace: database
+  labels:
+    app: postgresql-backup
+    component: backup
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  timeZone: "Asia/Jakarta"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid  # Don't run if previous job still running
+
+  jobTemplate:
+    metadata:
+      labels:
+        app: postgresql-backup
+        component: backup
+
+    spec:
+      backoffLimit: 3
+      activeDeadlineSeconds: 3600  # 1 hour timeout
+
+      template:
+        metadata:
+          labels:
+            app: postgresql-backup
+            component: backup
+
+        spec:
+          restartPolicy: OnFailure
+
+          # Run on stateful node (same as PostgreSQL)
+          tolerations:
+            - key: "stateful"
+              operator: "Equal"
+              value: "true"
+              effect: "NoSchedule"
+
+          nodeSelector:
+            workload-type: stateful
+
+          serviceAccountName: postgresql-backup-sa
+
+          containers:
+            - name: backup
+              image: google/cloud-sdk:alpine
+              imagePullPolicy: IfNotPresent
+
+              env:
+                - name: POSTGRES_HOST
+                  value: "postgresql-client.database.svc.cluster.local"
+
+                - name: POSTGRES_PORT
+                  value: "5432"
+
+                - name: POSTGRES_DB
+                  value: "orange_wallet_db"
+
+                - name: POSTGRES_USER
+                  value: "postgres"
+
+                - name: POSTGRES_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-credentials
+                      key: password
+
+                - name: GCS_BUCKET
+                  value: "orange-wallet-backups"
+
+                - name: BACKUP_RETENTION_DAYS
+                  value: "30"
+
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+
+                  echo "Starting PostgreSQL backup..."
+                  DATE=$(date +%Y%m%d-%H%M%S)
+                  BACKUP_FILE="postgresql-${DATE}.sql.gz"
+
+                  # Install PostgreSQL client
+                  apk add --no-cache postgresql-client
+
+                  # Create backup
+                  echo "Creating backup: ${BACKUP_FILE}"
+                  PGPASSWORD="${POSTGRES_PASSWORD}" pg_dump \
+                    -h "${POSTGRES_HOST}" \
+                    -p "${POSTGRES_PORT}" \
+                    -U "${POSTGRES_USER}" \
+                    -d "${POSTGRES_DB}" \
+                    --verbose \
+                    --format=plain \
+                    --clean \
+                    --if-exists \
+                    --no-owner \
+                    --no-acl \
+                    | gzip > "/tmp/${BACKUP_FILE}"
+
+                  # Get file size
+                  SIZE=$(du -h "/tmp/${BACKUP_FILE}" | cut -f1)
+                  echo "Backup size: ${SIZE}"
+
+                  # Upload to GCS
+                  echo "Uploading to gs://${GCS_BUCKET}/postgresql/"
+                  gsutil cp "/tmp/${BACKUP_FILE}" "gs://${GCS_BUCKET}/postgresql/"
+
+                  # Verify upload
+                  gsutil ls "gs://${GCS_BUCKET}/postgresql/${BACKUP_FILE}"
+
+                  # Cleanup old backups (keep last 30 days)
+                  echo "Cleaning up backups older than ${BACKUP_RETENTION_DAYS} days..."
+                  CUTOFF_DATE=$(date -d "${BACKUP_RETENTION_DAYS} days ago" +%Y%m%d 2>/dev/null || date -v-${BACKUP_RETENTION_DAYS}d +%Y%m%d)
+
+                  gsutil ls "gs://${GCS_BUCKET}/postgresql/" | while read backup; do
+                    BACKUP_DATE=$(basename "$backup" | sed 's/postgresql-\([0-9]\{8\}\).*/\1/')
+                    if [ "$BACKUP_DATE" -lt "$CUTOFF_DATE" ]; then
+                      echo "Deleting old backup: $backup"
+                      gsutil rm "$backup" || true
+                    fi
+                  done
+
+                  echo "Backup completed successfully!"
+                  echo "File: gs://${GCS_BUCKET}/postgresql/${BACKUP_FILE}"
+
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+
+---
+# =============================================================================
+# PostgreSQL Backup - ServiceAccount
+# =============================================================================
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: postgresql-backup-sa
+  namespace: database
+  labels:
+    app: postgresql-backup
+  annotations:
+    iam.gke.io/gcp-service-account: k8s-backup-sa@orange-wallet-project.iam.gserviceaccount.com
