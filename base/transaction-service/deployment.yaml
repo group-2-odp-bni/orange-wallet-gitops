@@ -101,12 +101,37 @@ spec:
                   name: postgres-connection
                   key: password
 
+            # Spring Boot Datasource (required for Flyway auto-config)
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-connection
+                  key: username
+
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-connection
+                  key: password
+
             # Flyway Schema
             - name: SPRING_FLYWAY_SCHEMAS
               value: "transaction_oltp"
 
             - name: SPRING_FLYWAY_DEFAULT_SCHEMA
               value: "transaction_oltp"
+
+            - name: SPRING_FLYWAY_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-connection
+                  key: username
+
+            - name: SPRING_FLYWAY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-connection
+                  key: password
 
             # HikariCP Pool Size (higher for transaction service)
             - name: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
