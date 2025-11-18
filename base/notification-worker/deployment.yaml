@@ -88,7 +88,10 @@ spec:
 
             # Kafka
             - name: KAFKA_BOOTSTRAP_SERVERS
-              value: "kafka-client.messaging.svc.cluster.local:9092"
+              valueFrom:
+                configMapKeyRef:
+                  name: kafka-config
+                  key: bootstrap-servers
 
             # WAHA Configuration
             - name: WAHA_BASE_URL
