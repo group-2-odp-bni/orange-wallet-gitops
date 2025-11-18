@@ -83,9 +83,12 @@ spec:
             - name: MONGO_DB_NAME
               value: "split_bill_db"
 
-            # Kafka Configuration
-            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
-              value: "kafka-client.messaging.svc.cluster.local:9092"
+            # Kafka
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: kafka-config
+                  key: bootstrap-servers
 
             # JWT/Auth Configuration
             - name: JWK_SET_URI
