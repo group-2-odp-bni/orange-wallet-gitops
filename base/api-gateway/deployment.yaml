@@ -9,7 +9,7 @@ metadata:
     tier: edge
     version: v1
 spec:
-  replicas: 2
+  replicas: 1  # HPA will scale to max 2 based on load
   strategy:
     type: RollingUpdate
     rollingUpdate:

@@ -1,0 +1,197 @@
+---
+# =============================================================================
+# WAHA (WhatsApp HTTP API) - Deployment
+# =============================================================================
+# Handles WhatsApp messaging for OTP notifications via notification-worker.
+#
+# Engine: GOWS (Go-based WhatsApp engine)
+# Features: Optimized for OTP-only usage (no groups, channels, media)
+#
+# Dependencies:
+# - None (standalone service)
+#
+# Storage:
+# - Sessions: Persistent volume for WhatsApp session state
+# - Media: Disabled (not needed for OTP)
+# =============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: waha
+  namespace: orange-wallet
+  labels:
+    app: waha
+    component: messaging
+    tier: infrastructure
+    version: v1
+spec:
+  replicas: 1  # Single instance sufficient for OTP workload
+  strategy:
+    type: Recreate  # Sessions require consistent pod identity
+
+  selector:
+    matchLabels:
+      app: waha
+      component: messaging
+
+  template:
+    metadata:
+      labels:
+        app: waha
+        component: messaging
+        tier: infrastructure
+        version: v1
+
+    spec:
+      nodeSelector:
+        workload-type: stateless
+
+      securityContext:
+        fsGroup: 1000
+
+      containers:
+        - name: waha
+          image: devlikeapro/waha:latest
+          imagePullPolicy: Always
+
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+
+          env:
+            # Core GOWS engine configuration
+            - name: WHATSAPP_DEFAULT_ENGINE
+              value: "GOWS"
+
+            - name: WAHA_LOG_LEVEL
+              value: "warn"
+
+            - name: WHATSAPP_DOWNLOAD_MEDIA
+              value: "false"
+
+            - name: WAHA_FILES_ENABLED
+              value: "false"
+
+            # Disable UI and documentation (security & resource optimization)
+            - name: WAHA_DASHBOARD_ENABLED
+              value: "false"
+
+            - name: WAHA_SWAGGER_ENABLED
+              value: "false"
+
+            # CRITICAL: Ignore non-essential events (research-backed optimization)
+            - name: WAHA_SESSION_CONFIG_IGNORE_GROUPS
+              value: "true"
+
+            - name: WAHA_SESSION_CONFIG_IGNORE_CHANNELS
+              value: "true"
+
+            - name: WAHA_SESSION_CONFIG_IGNORE_STATUS
+              value: "true"
+
+            - name: WAHA_SESSION_CONFIG_IGNORE_BROADCAST
+              value: "true"
+
+            # Service configuration
+            - name: WAHA_BASE_URL
+              value: "http://waha.orange-wallet.svc.cluster.local:3000"
+
+            - name: WHATSAPP_API_PORT
+              value: "3000"
+
+            - name: TZ
+              value: "Asia/Jakarta"
+
+            - name: WAHA_WORKER_ID
+              value: "waha-gows-otp"
+
+            - name: WHATSAPP_RESTART_ALL_SESSIONS
+              value: "True"
+
+            - name: WAHA_PRINT_QR
+              value: "True"
+
+            # Webhook configuration (notification-worker)
+            - name: WHATSAPP_HOOK_URL
+              value: "http://notification-worker.orange-wallet.svc.cluster.local:8085/api/webhooks/waha"
+
+            - name: WHATSAPP_HOOK_EVENTS
+              value: "message.ack,session.status"
+
+            - name: WHATSAPP_HOOK_HMAC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: waha-secrets
+                  key: webhook-hmac-secret
+
+            # Authentication
+            - name: WAHA_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: waha-secrets
+                  key: api-key
+
+            - name: WAHA_DASHBOARD_USERNAME
+              value: "admin"
+
+            - name: WAHA_DASHBOARD_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: waha-secrets
+                  key: dashboard-password
+
+          # Resource allocation (lightweight - optimized for OTP only)
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          # Health checks
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 3000
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 3000
+            initialDelaySeconds: 40
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+
+          startupProbe:
+            httpGet:
+              path: /ping
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 10
+
+          # Volume mounts
+          volumeMounts:
+            - name: waha-sessions
+              mountPath: /app/.sessions
+
+      # Volumes
+      volumes:
+        - name: waha-sessions
+          persistentVolumeClaim:
+            claimName: waha-sessions-pvc
+
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30

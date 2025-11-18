@@ -24,7 +24,7 @@ metadata:
     tier: application
     version: v1
 spec:
-  replicas: 2  # Reduced for resource constraints
+  replicas: 1  # HPA will scale to max 2 based on load
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -152,7 +152,7 @@ spec:
               value: "http://authentication-service.orange-wallet.svc.cluster.local:8081"
 
             # Kafka
-            - name: KAFKA_BOOTSTRAP_SERVERS
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               valueFrom:
                 configMapKeyRef:
                   name: kafka-config
