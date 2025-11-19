@@ -152,7 +152,7 @@ spec:
               value: "http://authentication-service.orange-wallet.svc.cluster.local:8081"
 
             # Kafka
-            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+            - name: KAFKA_BOOTSTRAP_SERVERS
               valueFrom:
                 configMapKeyRef:
                   name: kafka-config
