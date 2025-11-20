@@ -45,7 +45,7 @@ spec:
         version: v1
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/port: "8084"
+        prometheus.io/port: "8080"
         prometheus.io/path: "/actuator/prometheus"
 
     spec:
@@ -64,13 +64,13 @@ spec:
 
           ports:
             - name: http
-              containerPort: 8084
+              containerPort: 8080
               protocol: TCP
 
           env:
             # Application
             - name: SERVER_PORT
-              value: "8084"
+              value: "8080"
 
             - name: SPRING_APPLICATION_NAME
               value: "transaction-service"
@@ -225,7 +225,7 @@ spec:
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
-              port: 8084
+              port: 8080
             initialDelaySeconds: 90
             periodSeconds: 10
             timeoutSeconds: 5
@@ -235,7 +235,7 @@ spec:
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
-              port: 8084
+              port: 8080
             initialDelaySeconds: 60
             periodSeconds: 5
             timeoutSeconds: 3
@@ -245,7 +245,7 @@ spec:
           startupProbe:
             httpGet:
               path: /actuator/health/liveness
-              port: 8084
+              port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5

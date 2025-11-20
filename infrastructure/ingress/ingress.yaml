@@ -192,7 +192,7 @@ spec:
               service:
                 name: authentication-service
                 port:
-                  number: 8081
+                  number: 8080
 
           # User Service
           - path: /users(/|$)(.*)
@@ -201,7 +201,7 @@ spec:
               service:
                 name: user-service
                 port:
-                  number: 8082
+                  number: 8080
 
           # Wallet Service
           - path: /wallets(/|$)(.*)
@@ -210,7 +210,7 @@ spec:
               service:
                 name: wallet-service
                 port:
-                  number: 8083
+                  number: 8080
 
           # Transaction Service
           - path: /transactions(/|$)(.*)
@@ -219,4 +219,4 @@ spec:
               service:
                 name: transaction-service
                 port:
-                  number: 8084
+                  number: 8080

@@ -18,7 +18,7 @@ spec:
     component: worker
   ports:
     - name: http
-      port: 8085
-      targetPort: 8085
+      port: 8080
+      targetPort: 8080
       protocol: TCP
   sessionAffinity: None
