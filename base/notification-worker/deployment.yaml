@@ -95,7 +95,7 @@ spec:
 
             # WAHA Configuration
             - name: WAHA_BASE_URL
-              value: "http://waha.messaging.svc.cluster.local:3000"
+              value: "http://waha.orange-wallet.svc.cluster.local:3000"
 
             - name: WAHA_API_KEY
               valueFrom:
