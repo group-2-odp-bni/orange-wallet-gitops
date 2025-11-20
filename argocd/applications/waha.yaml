@@ -5,7 +5,7 @@ metadata:
   namespace: argocd
   labels:
     app.kubernetes.io/name: waha
-    app.kubernetes.io/part-of: orange-wallet-infrastructure
+    app.kubernetes.io/part-of: orange-wallet
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -14,11 +14,11 @@ spec:
   source:
     repoURL: https://github.com/group-2-odp-bni/orange-wallet-gitops.git
     targetRevision: main
-    path: infrastructure/statefulsets/waha
+    path: base/waha
 
   destination:
     server: https://kubernetes.default.svc
-    namespace: messaging
+    namespace: orange-wallet
 
   syncPolicy:
     automated:
