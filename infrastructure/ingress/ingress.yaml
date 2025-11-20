@@ -57,7 +57,7 @@ metadata:
     # CORS (additional layer, API Gateway also handles CORS)
     # Restricted to specific origins for production security
     nginx.ingress.kubernetes.io/enable-cors: "true"
-    nginx.ingress.kubernetes.io/cors-allow-origin: "https://orange-wallet.com, https://www.orange-wallet.com, https://app.orange-wallet.com"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://orange-wallet.com, https://www.orange-wallet.com, https://app.orange-wallet.com, https://orangebybni.my.id, https://api.orangebybni.my.id, https://app.orangebybni.my.id"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, PATCH, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
     nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
@@ -81,6 +81,10 @@ spec:
         - orange-wallet.com
         - www.orange-wallet.com
       secretName: orange-wallet-tls-secret  # Managed by Cert-Manager
+    - hosts:
+        - api.orangebybni.my.id
+        - orangebybni.my.id
+      secretName: orangebybni-tls-secret  # Managed by Cert-Manager
 
   rules:
     # Production rule with domain (TLS-enabled)
@@ -109,6 +113,29 @@ spec:
 
     # WWW subdomain (redirects to api.orange-wallet.com)
     - host: www.orange-wallet.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 8080
+
+    # orangebybni.my.id domain rules
+    - host: api.orangebybni.my.id
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 8080
+
+    - host: orangebybni.my.id
       http:
         paths:
           - path: /

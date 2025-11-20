@@ -139,6 +139,18 @@ spec:
                   name: redis-connection
                   key: port
 
+            - name: SPRING_DATA_REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: redis-connection
+                  key: host
+
+            - name: SPRING_DATA_REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: redis-connection
+                  key: port
+
             - name: SPRING_DATA_REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
