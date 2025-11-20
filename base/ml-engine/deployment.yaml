@@ -92,7 +92,7 @@ spec:
 
             # JWT/Auth Configuration
             - name: JWK_SET_URI
-              value: "http://authentication-service.orange-wallet.svc.cluster.local:8081/oauth2/jwks"
+              value: "http://authentication-service.orange-wallet.svc.cluster.local:8080/oauth2/jwks"
 
             - name: JWT_ISSUER
               value: "auth-service"
