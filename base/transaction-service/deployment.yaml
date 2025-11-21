@@ -139,17 +139,17 @@ spec:
 
             # OAuth2 / JWT Validation
             - name: AUTH_SERVICE_JWK_URI
-              value: "http://authentication-service.orange-wallet.svc.cluster.local:8081/oauth2/jwks"
+              value: "http://authentication-service.orange-wallet.svc.cluster.local:8080/oauth2/jwks"
 
             # Inter-Service URLs
             - name: USER_SERVICE_URL
-              value: "http://user-service.orange-wallet.svc.cluster.local:8082"
+              value: "http://user-service.orange-wallet.svc.cluster.local:8080"
 
             - name: WALLET_SERVICE_URL
-              value: "http://wallet-service.orange-wallet.svc.cluster.local:8083"
+              value: "http://wallet-service.orange-wallet.svc.cluster.local:8080"
 
             - name: AUTH_SERVICE_URL
-              value: "http://authentication-service.orange-wallet.svc.cluster.local:8081"
+              value: "http://authentication-service.orange-wallet.svc.cluster.local:8080"
 
             # Kafka
             - name: KAFKA_BOOTSTRAP_SERVERS

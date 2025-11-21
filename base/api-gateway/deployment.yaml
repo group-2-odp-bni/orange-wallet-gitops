@@ -69,16 +69,16 @@ spec:
 
             # Backend Service URLs
             - name: AUTHENTICATION_SERVICE_URL
-              value: "http://authentication-service.orange-wallet.svc.cluster.local:8081"
+              value: "http://authentication-service.orange-wallet.svc.cluster.local:8080"
 
             - name: USER_SERVICE_URL
-              value: "http://user-service.orange-wallet.svc.cluster.local:8082"
+              value: "http://user-service.orange-wallet.svc.cluster.local:8080"
 
             - name: WALLET_SERVICE_URL
-              value: "http://wallet-service.orange-wallet.svc.cluster.local:8083"
+              value: "http://wallet-service.orange-wallet.svc.cluster.local:8080"
 
             - name: TRANSACTION_SERVICE_URL
-              value: "http://transaction-service.orange-wallet.svc.cluster.local:8084"
+              value: "http://transaction-service.orange-wallet.svc.cluster.local:8080"
 
             # Redis Configuration
             - name: REDIS_HOST

@@ -169,11 +169,11 @@ spec:
 
             # OAuth2 / JWT Validation
             - name: JWK_SET_URI
-              value: "http://authentication-service.orange-wallet.svc.cluster.local:8081/oauth2/jwks"
+              value: "http://authentication-service.orange-wallet.svc.cluster.local:8080/oauth2/jwks"
 
             # Internal Service URLs
             - name: INTERNAL_USER_SERVICE_URL
-              value: "http://user-service.orange-wallet.svc.cluster.local:8082"
+              value: "http://user-service.orange-wallet.svc.cluster.local:8080"
 
             # Invite Secret
             - name: INVITE_SECRET

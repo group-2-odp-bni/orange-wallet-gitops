@@ -160,7 +160,7 @@ spec:
 
             # OAuth2 / JWT Validation
             - name: AUTH_SERVICE_JWK_URI
-              value: "http://authentication-service.orange-wallet.svc.cluster.local:8081/oauth2/jwks"
+              value: "http://authentication-service.orange-wallet.svc.cluster.local:8080/oauth2/jwks"
 
             # GCP Cloud Storage
             - name: GCS_BUCKET_NAME
