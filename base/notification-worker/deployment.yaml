@@ -126,10 +126,10 @@ spec:
           resources:
             requests:
               cpu: 250m
-              memory: 256Mi
+              memory: 512Mi
             limits:
               cpu: 500m
-              memory: 512Mi
+              memory: 1Gi
 
           livenessProbe:
             httpGet:
@@ -155,11 +155,11 @@ spec:
             httpGet:
               path: /actuator/health/liveness
               port: 8080
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 10
             timeoutSeconds: 5
             successThreshold: 1
-            failureThreshold: 30
+            failureThreshold: 40
 
           volumeMounts:
             - name: tmp
