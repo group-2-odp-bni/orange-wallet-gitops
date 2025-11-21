@@ -117,9 +117,11 @@ spec:
                 -XX:InitialRAMPercentage=50.0
                 -XX:+UseG1GC
                 -XX:MaxGCPauseMillis=200
+                -XX:TieredStopAtLevel=1
                 -XX:+HeapDumpOnOutOfMemoryError
                 -XX:HeapDumpPath=/tmp/heapdump.hprof
                 -Duser.timezone=Asia/Jakarta
+                -Dspring.jmx.enabled=false
 
           resources:
             requests:
@@ -153,11 +155,11 @@ spec:
             httpGet:
               path: /actuator/health/liveness
               port: 8080
-            initialDelaySeconds: 20
+            initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5
             successThreshold: 1
-            failureThreshold: 12
+            failureThreshold: 30
 
           volumeMounts:
             - name: tmp
