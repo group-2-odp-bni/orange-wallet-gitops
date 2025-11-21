@@ -19,7 +19,7 @@ metadata:
     tier: config
     version: v1
 spec:
-  replicas: 2
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
