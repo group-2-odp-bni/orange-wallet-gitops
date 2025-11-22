@@ -2,17 +2,10 @@
 # =============================================================================
 # Grafana - Ingress
 # =============================================================================
-# Exposes Grafana dashboard externally via NGINX Ingress Controller.
+# Exposes Grafana dashboard via Cloudflare + NGINX Ingress.
 #
-# Access URLs:
-# - Development: http://grafana.localhost
-# - Production: https://grafana.orangebybni.my.id
-#
-# Features:
-# - TLS termination (production only)
-# - Let's Encrypt certificate automation
-# - Rate limiting for security
-# - IP whitelisting (optional, comment out for public access)
+# Access: https://grafana.orangebybni.my.id
+# TLS: Cloudflare Origin Certificate
 # =============================================================================
 
 apiVersion: networking.k8s.io/v1
@@ -24,11 +17,7 @@ metadata:
     app: grafana
     component: visualization
   annotations:
-    # Ingress class
-    kubernetes.io/ingress.class: nginx
-
-    # SSL/TLS configuration (production)
-    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # TLS
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
 
@@ -39,7 +28,7 @@ metadata:
       more_set_headers "X-XSS-Protection: 1; mode=block";
       more_set_headers "Referrer-Policy: no-referrer-when-downgrade";
 
-    # Rate limiting to prevent abuse
+    # Rate limiting
     nginx.ingress.kubernetes.io/limit-rps: "10"
     nginx.ingress.kubernetes.io/limit-connections: "5"
 
@@ -48,30 +37,16 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
 
-    # IP whitelisting (optional - uncomment and configure for restricted access)
-    # nginx.ingress.kubernetes.io/whitelist-source-range: "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
-
 spec:
+  ingressClassName: nginx
+
   tls:
     - hosts:
         - grafana.orangebybni.my.id
-      secretName: grafana-tls
+      secretName: cloudflare-origin-tls
 
   rules:
-    # Production domain
     - host: grafana.orangebybni.my.id
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: grafana
-                port:
-                  number: 3000
-
-    # Development domain (local testing)
-    - host: grafana.localhost
       http:
         paths:
           - path: /

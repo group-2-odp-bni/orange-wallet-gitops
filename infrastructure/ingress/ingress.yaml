@@ -5,20 +5,12 @@
 # Routes external HTTP/HTTPS traffic to the API Gateway service.
 #
 # Architecture:
-#   Internet → NGINX Ingress Controller → API Gateway → Backend Services
-#
-# Access:
-#   - Production: https://api.orangebybni.my.id
-#   - Dev: http://<MASTER_IP>:30080
+#   Internet → Cloudflare (TLS) → GCP LB → NGINX Ingress → API Gateway
 #
 # TLS:
-#   - Certificate managed by Cert-Manager
-#   - Let's Encrypt for production
-#   - Self-signed for development
-#
-# CORS:
-#   - Configured at API Gateway level (Spring Cloud Gateway)
-#   - Ingress passes through all headers
+#   - Cloudflare Origin Certificate (15-year validity)
+#   - Cloudflare SSL Mode: Full (strict)
+#   - End-to-end encryption
 # =============================================================================
 
 apiVersion: networking.k8s.io/v1
@@ -30,60 +22,49 @@ metadata:
     app.kubernetes.io/name: orange-wallet-ingress
     app.kubernetes.io/part-of: orange-wallet
   annotations:
-    # NGINX Ingress specific annotations
-    nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"  # Redirect HTTP to HTTPS
-
-    # Force HTTPS (additional security)
+    # NGINX Ingress
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
 
-    # Connection settings
+    # Timeouts
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "90"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "90"
 
-    # Request size limits
+    # Request size
     nginx.ingress.kubernetes.io/proxy-body-size: "5m"
 
-    # Enable HTTP/2
+    # HTTP/2
     nginx.ingress.kubernetes.io/http2-push-preload: "true"
 
-    # HSTS (HTTP Strict Transport Security) for production
+    # HSTS
     nginx.ingress.kubernetes.io/hsts: "true"
-    nginx.ingress.kubernetes.io/hsts-max-age: "31536000"  # 1 year
+    nginx.ingress.kubernetes.io/hsts-max-age: "31536000"
     nginx.ingress.kubernetes.io/hsts-include-subdomains: "true"
     nginx.ingress.kubernetes.io/hsts-preload: "true"
 
-    # CORS (additional layer, API Gateway also handles CORS)
-    # Restricted to specific origins for production security
+    # CORS (API Gateway handles this, but adding defense-in-depth)
     nginx.ingress.kubernetes.io/enable-cors: "true"
-    nginx.ingress.kubernetes.io/cors-allow-origin: "https://orangebybni.my.id, https://www.orangebybni.my.id, https://app.orangebybni.my.id, https://orangebybni.my.id, https://api.orangebybni.my.id, https://app.orangebybni.my.id"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://orangebybni.my.id, https://www.orangebybni.my.id, https://app.orangebybni.my.id"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, PATCH, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
     nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
 
-    # Rate limiting (production security)
+    # Rate limiting
     nginx.ingress.kubernetes.io/limit-rps: "100"
-    nginx.ingress.kubernetes.io/limit-rpm: "1000"
     nginx.ingress.kubernetes.io/limit-connections: "50"
 
 spec:
   ingressClassName: nginx
 
-  # TLS configuration
   tls:
     - hosts:
         - api.orangebybni.my.id
         - orangebybni.my.id
         - www.orangebybni.my.id
-      secretName: orange-wallet-tls-secret  # Managed by Cert-Manager
-    - hosts:
-        - api.orangebybni.my.id
-        - orangebybni.my.id
-      secretName: orangebybni-tls-secret  # Managed by Cert-Manager
+      secretName: cloudflare-origin-tls
 
   rules:
-    # Production rule with domain (TLS-enabled)
     - host: api.orangebybni.my.id
       http:
         paths:
@@ -95,7 +76,6 @@ spec:
                 port:
                   number: 8080
 
-    # Redirect root domain to API subdomain
     - host: orangebybni.my.id
       http:
         paths:
@@ -107,44 +87,8 @@ spec:
                 port:
                   number: 8080
 
-    # WWW subdomain (redirects to api.orangebybni.my.id)
     - host: www.orangebybni.my.id
       http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: api-gateway
-                port:
-                  number: 8080
-
-    # orangebybni.my.id domain rules
-    - host: api.orangebybni.my.id
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: api-gateway
-                port:
-                  number: 8080
-
-    - host: orangebybni.my.id
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: api-gateway
-                port:
-                  number: 8080
-
-    # Fallback rule for IP-based access (development/testing)
-    # Note: TLS will show certificate error when accessing via IP
-    - http:
         paths:
           - path: /
             pathType: Prefix
