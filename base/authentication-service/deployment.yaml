@@ -167,7 +167,8 @@ spec:
             # JWT, reCAPTCHA configs removed - now managed via Spring Cloud Config
             # See: spring-cloud-configmap/authentication-service.yml
 
-            # RSA Keys (mounted from configmap - TODO: migrate to K8s Secret)
+            # RSA Keys (infrastructure-specific paths - keep as ENV var)
+            # Keys mounted from Secret to /app/keys/
             - name: ORANGE_RSA_PUBLIC_KEY
               value: "file:/app/keys/public.pem"
 
