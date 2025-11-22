@@ -11,4 +11,4 @@ resources:
 images:
   - name: teukumunawar/orange-wallet-api-gateway
     newName: docker.io/teukumunawar/orange-wallet-api-gateway
-    newTag: a9fa2f9160af390f8233605d773938f171965e5d # CI/CD will update this with commit SHA
+    newTag: 04a50f5b59e6b3156e009ab5b830ba661c969856 # CI/CD will update this with commit SHA
