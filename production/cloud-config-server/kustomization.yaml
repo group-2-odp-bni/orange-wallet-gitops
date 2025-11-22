@@ -5,13 +5,10 @@
 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
 namespace: orange-wallet
-
 resources:
   - ../../base/cloud-config-server
-
 images:
   - name: teukumunawar/orange-wallet-cloud-config-server
     newName: docker.io/teukumunawar/orange-wallet-cloud-config-server
-    newTag: latest  # CI/CD will update this with commit SHA
+    newTag: a9fa2f9160af390f8233605d773938f171965e5d # CI/CD will update this with commit SHA
