@@ -6,7 +6,7 @@
 #
 # Access URLs:
 # - Development: http://grafana.localhost
-# - Production: https://grafana.orange-wallet.com
+# - Production: https://grafana.orangebybni.my.id
 #
 # Features:
 # - TLS termination (production only)
@@ -54,12 +54,12 @@ metadata:
 spec:
   tls:
     - hosts:
-        - grafana.orange-wallet.com
+        - grafana.orangebybni.my.id
       secretName: grafana-tls
 
   rules:
     # Production domain
-    - host: grafana.orange-wallet.com
+    - host: grafana.orangebybni.my.id
       http:
         paths:
           - path: /

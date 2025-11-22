@@ -13,6 +13,9 @@ metadata:
     component: tracing
 data:
   tempo.yaml: |
+    # Monolithic mode - all components in single process
+    target: all
+
     server:
       http_listen_port: 3200
       log_level: info
@@ -55,9 +58,7 @@ data:
           max_workers: 100
           queue_depth: 10000
 
-    querier:
-      frontend_worker:
-        frontend_address: tempo:3200
+    # Removed querier.frontend_worker - not needed in monolithic mode
 
     query_frontend:
       search:

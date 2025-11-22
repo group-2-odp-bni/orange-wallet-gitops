@@ -57,7 +57,7 @@ metadata:
     # CORS (additional layer, API Gateway also handles CORS)
     # Restricted to specific origins for production security
     nginx.ingress.kubernetes.io/enable-cors: "true"
-    nginx.ingress.kubernetes.io/cors-allow-origin: "https://orange-wallet.com, https://www.orange-wallet.com, https://app.orange-wallet.com, https://orangebybni.my.id, https://api.orangebybni.my.id, https://app.orangebybni.my.id"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://orangebybni.my.id, https://www.orangebybni.my.id, https://app.orangebybni.my.id, https://orangebybni.my.id, https://api.orangebybni.my.id, https://app.orangebybni.my.id"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, PATCH, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
     nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
@@ -77,9 +77,9 @@ spec:
   # TLS configuration
   tls:
     - hosts:
-        - api.orange-wallet.com
-        - orange-wallet.com
-        - www.orange-wallet.com
+        - api.orangebybni.my.id
+        - orangebybni.my.id
+        - www.orangebybni.my.id
       secretName: orange-wallet-tls-secret  # Managed by Cert-Manager
     - hosts:
         - api.orangebybni.my.id
@@ -88,7 +88,7 @@ spec:
 
   rules:
     # Production rule with domain (TLS-enabled)
-    - host: api.orange-wallet.com
+    - host: api.orangebybni.my.id
       http:
         paths:
           - path: /
@@ -100,7 +100,7 @@ spec:
                   number: 8080
 
     # Redirect root domain to API subdomain
-    - host: orange-wallet.com
+    - host: orangebybni.my.id
       http:
         paths:
           - path: /
@@ -111,8 +111,8 @@ spec:
                 port:
                   number: 8080
 
-    # WWW subdomain (redirects to api.orange-wallet.com)
-    - host: www.orange-wallet.com
+    # WWW subdomain (redirects to api.orangebybni.my.id)
+    - host: www.orangebybni.my.id
       http:
         paths:
           - path: /

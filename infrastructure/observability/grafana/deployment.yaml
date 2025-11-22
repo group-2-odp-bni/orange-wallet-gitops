@@ -15,7 +15,7 @@
 #
 # Access:
 # - Internal: http://grafana.observability.svc.cluster.local:3000
-# - External: https://grafana.orange-wallet.com (via Ingress)
+# - External: https://grafana.orangebybni.my.id (via Ingress)
 # - Default credentials: admin/admin (change on first login)
 # =============================================================================
 
@@ -69,9 +69,9 @@ spec:
 
             # Server settings
             - name: GF_SERVER_ROOT_URL
-              value: https://grafana.orange-wallet.com
+              value: https://grafana.orangebybni.my.id
             - name: GF_SERVER_DOMAIN
-              value: grafana.orange-wallet.com
+              value: grafana.orangebybni.my.id
 
             # Anonymous access (disabled for production)
             - name: GF_AUTH_ANONYMOUS_ENABLED

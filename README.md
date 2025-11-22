@@ -191,7 +191,7 @@ Access ArgoCD dashboard:
 kubectl port-forward svc/argocd-server -n argocd 8080:443
 
 # Or via Ingress (if configured)
-# https://argocd.orange-wallet.com
+# https://argocd.orangebybni.my.id
 ```
 
 Login credentials:
@@ -371,7 +371,7 @@ This repository is managed by CI/CD automation. Manual changes should be:
 
 - **CI/CD Issues:** Check [GITOPS-MIGRATION-CHECKLIST.md](../be-capstone-project/.github/GITOPS-MIGRATION-CHECKLIST.md)
 - **Application Repo:** [be-capstone-project](https://github.com/group-2-odp-bni/be-capstone-project)
-- **ArgoCD UI:** https://argocd.orange-wallet.com
+- **ArgoCD UI:** https://argocd.orangebybni.my.id
 
 ---
 

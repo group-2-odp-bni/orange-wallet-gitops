@@ -22,7 +22,7 @@ spec:
     server: https://acme-staging-v02.api.letsencrypt.org/directory
 
     # Email for certificate expiry notifications
-    email: admin@orange-wallet.com  # TODO: Replace with real email
+    email: admin@orangebybni.com
 
     # Secret to store ACME account private key
     privateKeySecretRef:
@@ -71,7 +71,7 @@ spec:
 
     # Email for certificate expiry notifications
     # Let's Encrypt will send renewal reminders to this email
-    email: admin@orange-wallet.com  # TODO: Replace with real email
+    email: admin@orangebybni.my.id  # TODO: Replace with real email
 
     # Secret to store ACME account private key
     privateKeySecretRef:

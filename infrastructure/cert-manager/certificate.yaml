@@ -13,8 +13,8 @@
 #   6. Auto-renewal 30 days before expiry
 #
 # DNS Configuration Required:
-#   - api.orange-wallet.com → Load Balancer IP
-#   - orange-wallet.com → Load Balancer IP
+#   - api.orangebybni.my.id → Load Balancer IP
+#   - orangebybni.my.id → Load Balancer IP
 #
 # Certificate Validity: 90 days (Let's Encrypt standard)
 # Auto-Renewal: 30 days before expiry
@@ -42,14 +42,14 @@ spec:
     group: cert-manager.io
 
   # Common Name (primary domain)
-  commonName: api.orange-wallet.com
+  commonName: api.orangebybni.my.id
 
   # Subject Alternative Names (SANs)
   # All domains that should be covered by this certificate
   dnsNames:
-  - api.orange-wallet.com
-  - orange-wallet.com
-  - www.orange-wallet.com
+  - api.orangebybni.my.id
+  - orangebybni.my.id
+  - www.orangebybni.my.id
 
   # Certificate duration (Let's Encrypt issues 90-day certs)
   duration: 2160h  # 90 days
