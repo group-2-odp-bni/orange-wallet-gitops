@@ -106,8 +106,8 @@ spec:
             - name: WAHA_WEBHOOK_HMAC_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: external-api-keys
-                  key: waha-webhook-hmac-secret
+                  name: waha-secrets
+                  key: webhook-hmac-secret
 
             # Kafka Consumer Tuning
             - name: SPRING_KAFKA_LISTENER_CONCURRENCY

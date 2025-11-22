@@ -1,0 +1,51 @@
+---
+# =============================================================================
+# PriorityClasses - Pod Scheduling Priority
+# =============================================================================
+# Higher value = higher priority
+# Used to ensure critical infrastructure pods are scheduled first
+# =============================================================================
+
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: system-critical
+value: 1000000
+globalDefault: false
+description: "Reserved for critical system components (DNS, API server)"
+
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: infrastructure-high
+value: 10000
+globalDefault: false
+description: "High priority for core infrastructure (NGINX Ingress, ArgoCD)"
+
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: database-high
+value: 5000
+globalDefault: false
+description: "High priority for databases (PostgreSQL, Redis, Kafka)"
+
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: application-normal
+value: 1000
+globalDefault: true
+description: "Normal priority for application workloads (default)"
+
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: batch-low
+value: 100
+globalDefault: false
+description: "Low priority for batch jobs and background tasks"
