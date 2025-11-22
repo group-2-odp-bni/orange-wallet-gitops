@@ -15,6 +15,7 @@ namespace: argocd
 # Resources
 resources:
   - ingress.yaml
+  - service-patch.yaml  # Override service type from NodePort to ClusterIP
 
 # Labels applied to all resources
 labels:
