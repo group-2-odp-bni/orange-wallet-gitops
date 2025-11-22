@@ -1,0 +1,64 @@
+---
+# =============================================================================
+# ArgoCD - Ingress
+# =============================================================================
+# Exposes ArgoCD UI and API via Cloudflare + NGINX Ingress.
+#
+# Access: https://argocd.orangebybni.my.id
+# TLS: Cloudflare Origin Certificate
+# =============================================================================
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-server
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-server
+    app.kubernetes.io/part-of: argocd
+  annotations:
+    # Ingress class
+    kubernetes.io/ingress.class: "nginx"
+
+    # TLS
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+
+    # Backend protocol (ArgoCD uses HTTPS with self-signed cert)
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+
+    # Proxy SSL verification (ArgoCD uses self-signed cert)
+    nginx.ingress.kubernetes.io/proxy-ssl-verify: "false"
+
+    # Proxy headers for ArgoCD
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+
+    # Rate limiting (relaxed for dashboard)
+    nginx.ingress.kubernetes.io/limit-rps: "50"
+    nginx.ingress.kubernetes.io/limit-connections: "20"
+
+    # Timeouts
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+
+spec:
+  ingressClassName: nginx
+
+  tls:
+    - hosts:
+        - argocd.orangebybni.my.id
+      secretName: cloudflare-origin-tls
+
+  rules:
+    - host: argocd.orangebybni.my.id
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: argocd-server
+                port:
+                  number: 443
