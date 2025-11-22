@@ -1,0 +1,110 @@
+---
+# =============================================================================
+# Health Check Endpoint for GCP Load Balancer
+# =============================================================================
+# GCP health checks require HTTP 200 response.
+# NGINX Ingress returns 404 for unknown hosts, which fails health checks.
+# This DaemonSet provides a dedicated /healthz endpoint returning 200 OK.
+#
+# Architecture:
+#   GCP Health Check → NodePort 30254 → healthz-lb pod → 200 OK
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: healthz-lb
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: healthz-lb
+    app.kubernetes.io/component: health-check
+spec:
+  type: NodePort
+  selector:
+    app: healthz-lb
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    nodePort: 30254
+    protocol: TCP
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: healthz-lb
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: healthz-lb
+    app.kubernetes.io/component: health-check
+spec:
+  selector:
+    matchLabels:
+      app: healthz-lb
+  template:
+    metadata:
+      labels:
+        app: healthz-lb
+    spec:
+      nodeSelector:
+        workload-type: stateless  # Only on worker nodes
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: config
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: default.conf
+        resources:
+          requests:
+            cpu: 10m
+            memory: 20Mi
+          limits:
+            cpu: 20m
+            memory: 40Mi
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 80
+          initialDelaySeconds: 3
+          periodSeconds: 5
+      volumes:
+      - name: config
+        configMap:
+          name: healthz-lb-config
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: healthz-lb-config
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: healthz-lb
+data:
+  default.conf: |
+    server {
+      listen 80;
+      server_name _;
+
+      location /healthz {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+      }
+
+      location / {
+        access_log off;
+        return 200 "ok\n";
+        add_header Content-Type text/plain;
+      }
+    }
