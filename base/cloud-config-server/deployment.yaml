@@ -73,6 +73,10 @@ spec:
             - name: SPRING_PROFILES_ACTIVE
               value: "git"
 
+            # JGit Config Directory (fix permission issue)
+            - name: XDG_CONFIG_HOME
+              value: "/tmp"
+
             # Git Repository Configuration
             - name: SPRING_CLOUD_CONFIG_SERVER_GIT_URI
               value: "https://github.com/group-2-odp-bni/spring-cloud-configmap.git"
