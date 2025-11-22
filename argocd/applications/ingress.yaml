@@ -11,7 +11,7 @@ spec:
   source:
     repoURL: https://github.com/group-2-odp-bni/orange-wallet-gitops.git
     targetRevision: main
-    path: production/ingress
+    path: infrastructure/ingress
 
   destination:
     server: https://kubernetes.default.svc
