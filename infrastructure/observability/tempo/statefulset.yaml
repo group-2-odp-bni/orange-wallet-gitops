@@ -1,0 +1,121 @@
+---
+# =============================================================================
+# Tempo - Distributed Tracing StatefulSet
+# =============================================================================
+# Tempo stores and queries distributed traces from microservices.
+#
+# Storage:
+# - 10Gi persistent storage for trace data
+# - Retention: 7 days
+#
+# Receivers:
+# - OTLP (OpenTelemetry Protocol)
+# - Jaeger
+# - Zipkin
+#
+# Access:
+# - Port 3200 for queries (Grafana connects here)
+# - Port 4317 for OTLP gRPC
+# - Port 4318 for OTLP HTTP
+# =============================================================================
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tempo
+  namespace: observability
+  labels:
+    app: tempo
+    component: tracing
+spec:
+  serviceName: tempo
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tempo
+      component: tracing
+
+  template:
+    metadata:
+      labels:
+        app: tempo
+        component: tracing
+
+    spec:
+      securityContext:
+        fsGroup: 10001
+        runAsUser: 10001
+        runAsNonRoot: true
+
+      containers:
+        - name: tempo
+          image: grafana/tempo:2.3.1
+          imagePullPolicy: IfNotPresent
+
+          args:
+            - -config.file=/etc/tempo/tempo.yaml
+
+          ports:
+            - name: http
+              containerPort: 3200
+              protocol: TCP
+            - name: otlp-grpc
+              containerPort: 4317
+              protocol: TCP
+            - name: otlp-http
+              containerPort: 4318
+              protocol: TCP
+            - name: jaeger-grpc
+              containerPort: 14250
+              protocol: TCP
+            - name: zipkin
+              containerPort: 9411
+              protocol: TCP
+
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: 3200
+            initialDelaySeconds: 30
+            timeoutSeconds: 1
+            periodSeconds: 10
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 3200
+            initialDelaySeconds: 30
+            timeoutSeconds: 1
+            periodSeconds: 10
+            failureThreshold: 3
+
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+
+          volumeMounts:
+            - name: config
+              mountPath: /etc/tempo
+            - name: storage
+              mountPath: /var/tempo
+
+      volumes:
+        - name: config
+          configMap:
+            name: tempo-config
+
+  volumeClaimTemplates:
+    - metadata:
+        name: storage
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        storageClassName: local-path

@@ -1,0 +1,111 @@
+---
+# =============================================================================
+# Loki - Log Aggregation StatefulSet
+# =============================================================================
+# Loki aggregates logs from all services via Promtail.
+# Provides a Prometheus-like query language (LogQL) for log analysis.
+#
+# Storage:
+# - Uses local-path provisioner for persistent storage
+# - Stores log chunks and index
+#
+# Access:
+# - Internal only (via Grafana)
+# - Port 3100 for queries
+# =============================================================================
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: loki
+  namespace: observability
+  labels:
+    app: loki
+    component: logging
+spec:
+  serviceName: loki
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loki
+      component: logging
+
+  template:
+    metadata:
+      labels:
+        app: loki
+        component: logging
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "3100"
+        prometheus.io/path: "/metrics"
+
+    spec:
+      securityContext:
+        fsGroup: 10001
+        runAsUser: 10001
+        runAsNonRoot: true
+
+      containers:
+        - name: loki
+          image: grafana/loki:2.9.3
+          imagePullPolicy: IfNotPresent
+
+          args:
+            - -config.file=/etc/loki/loki.yaml
+
+          ports:
+            - name: http
+              containerPort: 3100
+              protocol: TCP
+            - name: grpc
+              containerPort: 9095
+              protocol: TCP
+
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: 3100
+            initialDelaySeconds: 45
+            timeoutSeconds: 1
+            periodSeconds: 10
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 3100
+            initialDelaySeconds: 45
+            timeoutSeconds: 1
+            periodSeconds: 10
+            failureThreshold: 3
+
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+
+          volumeMounts:
+            - name: config
+              mountPath: /etc/loki
+            - name: storage
+              mountPath: /loki
+
+      volumes:
+        - name: config
+          configMap:
+            name: loki-config
+
+  volumeClaimTemplates:
+    - metadata:
+        name: storage
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        storageClassName: local-path

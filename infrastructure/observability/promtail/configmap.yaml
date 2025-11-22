@@ -1,0 +1,148 @@
+---
+# =============================================================================
+# Promtail - Configuration
+# =============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: promtail-config
+  namespace: observability
+  labels:
+    app: promtail
+    component: logging
+data:
+  promtail.yaml: |
+    server:
+      http_listen_port: 3101
+      log_level: info
+
+    positions:
+      filename: /run/promtail/positions.yaml
+
+    clients:
+      - url: http://loki.observability.svc.cluster.local:3100/loki/api/v1/push
+        backoff_config:
+          min_period: 100ms
+          max_period: 10s
+          max_retries: 10
+        timeout: 10s
+
+    scrape_configs:
+      # =================================================================
+      # Kubernetes Pod Logs
+      # =================================================================
+      - job_name: kubernetes-pods
+
+        kubernetes_sd_configs:
+          - role: pod
+
+        pipeline_stages:
+          # Extract log level from Spring Boot logs
+          - regex:
+              expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d{3})\s+(?P<level>\w+)\s+(?P<thread>\[.*?\])\s+(?P<logger>\S+)\s+:\s+(?P<message>.*)$'
+          - labels:
+              level:
+              thread:
+              logger:
+
+          # Drop debug logs from certain namespaces (to save space)
+          - match:
+              selector: '{namespace="kube-system"} |= "level=debug"'
+              action: drop
+
+        relabel_configs:
+          # Only scrape pods with specific namespaces
+          - source_labels:
+              - __meta_kubernetes_namespace
+            regex: (orange-wallet|orange-wallet-dev|observability|database|messaging)
+            action: keep
+
+          # Add namespace label
+          - source_labels:
+              - __meta_kubernetes_namespace
+            target_label: namespace
+
+          # Add pod name label
+          - source_labels:
+              - __meta_kubernetes_pod_name
+            target_label: pod
+
+          # Add container name label
+          - source_labels:
+              - __meta_kubernetes_pod_container_name
+            target_label: container
+
+          # Add app label
+          - source_labels:
+              - __meta_kubernetes_pod_label_app
+            target_label: app
+
+          # Add environment label
+          - source_labels:
+              - __meta_kubernetes_pod_label_environment
+            target_label: environment
+
+          # Add component label
+          - source_labels:
+              - __meta_kubernetes_pod_label_component
+            target_label: component
+
+          # Add node name
+          - source_labels:
+              - __meta_kubernetes_pod_node_name
+            target_label: node
+
+          # Set path to container logs
+          - source_labels:
+              - __meta_kubernetes_pod_uid
+              - __meta_kubernetes_pod_container_name
+            target_label: __path__
+            separator: /
+            replacement: /var/log/pods/*$1/*.log
+
+      # =================================================================
+      # Kubernetes System Logs
+      # =================================================================
+      - job_name: kubernetes-system
+
+        kubernetes_sd_configs:
+          - role: pod
+
+        pipeline_stages:
+          - json:
+              expressions:
+                output: log
+                stream: stream
+                timestamp: time
+          - timestamp:
+              source: timestamp
+              format: RFC3339Nano
+          - output:
+              source: output
+
+        relabel_configs:
+          # Only kube-system namespace
+          - source_labels:
+              - __meta_kubernetes_namespace
+            regex: kube-system
+            action: keep
+
+          # Add labels
+          - source_labels:
+              - __meta_kubernetes_namespace
+            target_label: namespace
+          - source_labels:
+              - __meta_kubernetes_pod_name
+            target_label: pod
+          - source_labels:
+              - __meta_kubernetes_pod_container_name
+            target_label: container
+
+          # Set path
+          - source_labels:
+              - __meta_kubernetes_pod_uid
+              - __meta_kubernetes_pod_container_name
+            target_label: __path__
+            separator: /
+            replacement: /var/log/pods/*$1/*.log

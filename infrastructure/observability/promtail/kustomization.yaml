@@ -1,0 +1,19 @@
+---
+# =============================================================================
+# Kustomization - Promtail
+# =============================================================================
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: observability
+
+resources:
+  - daemonset.yaml
+  - configmap.yaml
+
+labels:
+  - pairs:
+      app.kubernetes.io/name: promtail
+      app.kubernetes.io/part-of: observability
+      app.kubernetes.io/component: logging

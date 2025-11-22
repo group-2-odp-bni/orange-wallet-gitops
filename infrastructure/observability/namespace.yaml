@@ -1,0 +1,21 @@
+---
+# =============================================================================
+# Observability - Namespace
+# =============================================================================
+# Dedicated namespace for observability stack (LGTM).
+#
+# Components in this namespace:
+# - Loki (logs)
+# - Promtail (log collection)
+# - Grafana (visualization)
+# - Tempo (tracing)
+# - Prometheus (metrics)
+# =============================================================================
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: observability
+  labels:
+    name: observability
+    app.kubernetes.io/part-of: observability

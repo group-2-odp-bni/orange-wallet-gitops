@@ -1,0 +1,69 @@
+---
+# =============================================================================
+# Tempo - Configuration
+# =============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tempo-config
+  namespace: observability
+  labels:
+    app: tempo
+    component: tracing
+data:
+  tempo.yaml: |
+    server:
+      http_listen_port: 3200
+      log_level: info
+
+    distributor:
+      receivers:
+        # OTLP receiver (OpenTelemetry)
+        otlp:
+          protocols:
+            grpc:
+              endpoint: 0.0.0.0:4317
+            http:
+              endpoint: 0.0.0.0:4318
+
+        # Jaeger receiver
+        jaeger:
+          protocols:
+            grpc:
+              endpoint: 0.0.0.0:14250
+
+        # Zipkin receiver
+        zipkin:
+          endpoint: 0.0.0.0:9411
+
+    ingester:
+      max_block_duration: 5m
+
+    compactor:
+      compaction:
+        block_retention: 168h  # 7 days
+
+    storage:
+      trace:
+        backend: local
+        local:
+          path: /var/tempo/traces
+        wal:
+          path: /var/tempo/wal
+        pool:
+          max_workers: 100
+          queue_depth: 10000
+
+    querier:
+      frontend_worker:
+        frontend_address: tempo:3200
+
+    query_frontend:
+      search:
+        max_duration: 0s
+
+    overrides:
+      defaults:
+        metrics_generator:
+          processors: []

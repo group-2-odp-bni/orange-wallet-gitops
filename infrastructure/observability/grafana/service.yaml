@@ -1,0 +1,23 @@
+---
+# =============================================================================
+# Grafana - Service
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: observability
+  labels:
+    app: grafana
+    component: visualization
+spec:
+  type: ClusterIP
+  selector:
+    app: grafana
+    component: visualization
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+      protocol: TCP

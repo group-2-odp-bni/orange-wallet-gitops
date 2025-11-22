@@ -1,0 +1,178 @@
+---
+# =============================================================================
+# Grafana - Deployment
+# =============================================================================
+# Grafana provides unified observability dashboard for:
+# - Logs (Loki)
+# - Metrics (Prometheus)
+# - Traces (Tempo)
+#
+# Features:
+# - Pre-configured datasources for LGTM stack
+# - Dashboard provisioning from ConfigMaps
+# - Persistent storage for plugins and user dashboards
+# - Single pane of glass for all observability data
+#
+# Access:
+# - Internal: http://grafana.observability.svc.cluster.local:3000
+# - External: https://grafana.orange-wallet.com (via Ingress)
+# - Default credentials: admin/admin (change on first login)
+# =============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: observability
+  labels:
+    app: grafana
+    component: visualization
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+      component: visualization
+
+  template:
+    metadata:
+      labels:
+        app: grafana
+        component: visualization
+
+    spec:
+      securityContext:
+        fsGroup: 472
+        runAsUser: 472
+        runAsNonRoot: true
+
+      containers:
+        - name: grafana
+          image: grafana/grafana:10.2.2
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+
+          env:
+            # Security settings
+            - name: GF_SECURITY_ADMIN_USER
+              value: admin
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-admin
+                  key: password
+                  optional: true
+
+            # Server settings
+            - name: GF_SERVER_ROOT_URL
+              value: https://grafana.orange-wallet.com
+            - name: GF_SERVER_DOMAIN
+              value: grafana.orange-wallet.com
+
+            # Anonymous access (disabled for production)
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "false"
+
+            # Install plugins
+            - name: GF_INSTALL_PLUGINS
+              value: "grafana-piechart-panel,grafana-clock-panel"
+
+            # Datasource provisioning
+            - name: GF_PATHS_PROVISIONING
+              value: /etc/grafana/provisioning
+
+            # Enable dashboards from ConfigMap
+            - name: GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH
+              value: /var/lib/grafana/dashboards/orange-wallet-overview.json
+
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 60
+            timeoutSeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 30
+            timeoutSeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          volumeMounts:
+            # Datasource provisioning
+            - name: datasources
+              mountPath: /etc/grafana/provisioning/datasources
+              readOnly: true
+
+            # Dashboard provider provisioning
+            - name: dashboard-providers
+              mountPath: /etc/grafana/provisioning/dashboards
+              readOnly: true
+
+            # Dashboard JSON files
+            - name: dashboards
+              mountPath: /var/lib/grafana/dashboards
+              readOnly: true
+
+            # Persistent storage for plugins and user-created content
+            - name: storage
+              mountPath: /var/lib/grafana
+
+      volumes:
+        # Datasources ConfigMap
+        - name: datasources
+          configMap:
+            name: grafana-datasources
+
+        # Dashboard providers ConfigMap
+        - name: dashboard-providers
+          configMap:
+            name: grafana-dashboard-providers
+
+        # Dashboards ConfigMap
+        - name: dashboards
+          configMap:
+            name: grafana-dashboards
+
+        # Persistent storage
+        - name: storage
+          persistentVolumeClaim:
+            claimName: grafana-storage
+
+---
+# =============================================================================
+# Grafana - PersistentVolumeClaim
+# =============================================================================
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-storage
+  namespace: observability
+  labels:
+    app: grafana
+    component: visualization
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 5Gi

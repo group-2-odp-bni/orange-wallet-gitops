@@ -1,0 +1,233 @@
+---
+# =============================================================================
+# Prometheus - Configuration
+# =============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: observability
+  labels:
+    app: prometheus
+    component: metrics
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      scrape_timeout: 10s
+      evaluation_interval: 15s
+
+    # Alertmanager configuration (optional)
+    # alerting:
+    #   alertmanagers:
+    #     - static_configs:
+    #         - targets:
+    #             - alertmanager:9093
+
+    # Load rules once and periodically evaluate them
+    # rule_files:
+    #   - /etc/prometheus/rules/*.yml
+
+    scrape_configs:
+      # =================================================================
+      # Prometheus self-monitoring
+      # =================================================================
+      - job_name: 'prometheus'
+        static_configs:
+          - targets:
+              - localhost:9090
+
+      # =================================================================
+      # Kubernetes API Server
+      # =================================================================
+      - job_name: 'kubernetes-apiservers'
+        kubernetes_sd_configs:
+          - role: endpoints
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+          - source_labels:
+              - __meta_kubernetes_namespace
+              - __meta_kubernetes_service_name
+              - __meta_kubernetes_endpoint_port_name
+            action: keep
+            regex: default;kubernetes;https
+
+      # =================================================================
+      # Kubernetes Nodes
+      # =================================================================
+      - job_name: 'kubernetes-nodes'
+        kubernetes_sd_configs:
+          - role: node
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+
+      # =================================================================
+      # Kubernetes Pods (with annotation prometheus.io/scrape: "true")
+      # =================================================================
+      - job_name: 'kubernetes-pods'
+        kubernetes_sd_configs:
+          - role: pod
+
+        relabel_configs:
+          # Only scrape pods with annotation prometheus.io/scrape: "true"
+          - source_labels:
+              - __meta_kubernetes_pod_annotation_prometheus_io_scrape
+            action: keep
+            regex: true
+
+          # Get scrape path from annotation prometheus.io/path
+          - source_labels:
+              - __meta_kubernetes_pod_annotation_prometheus_io_path
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+
+          # Get scrape port from annotation prometheus.io/port
+          - source_labels:
+              - __address__
+              - __meta_kubernetes_pod_annotation_prometheus_io_port
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
+
+          # Add namespace label
+          - source_labels:
+              - __meta_kubernetes_namespace
+            action: replace
+            target_label: namespace
+
+          # Add pod label
+          - source_labels:
+              - __meta_kubernetes_pod_name
+            action: replace
+            target_label: pod
+
+          # Add container label
+          - source_labels:
+              - __meta_kubernetes_pod_container_name
+            action: replace
+            target_label: container
+
+          # Add app label
+          - source_labels:
+              - __meta_kubernetes_pod_label_app
+            action: replace
+            target_label: app
+
+          # Add component label
+          - source_labels:
+              - __meta_kubernetes_pod_label_component
+            action: replace
+            target_label: component
+
+          # Add environment label
+          - source_labels:
+              - __meta_kubernetes_pod_label_environment
+            action: replace
+            target_label: environment
+
+          # Add node label
+          - source_labels:
+              - __meta_kubernetes_pod_node_name
+            action: replace
+            target_label: node
+
+      # =================================================================
+      # Orange Wallet Services (specific scraping)
+      # =================================================================
+      - job_name: 'orange-wallet-services'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - orange-wallet
+                - orange-wallet-dev
+
+        relabel_configs:
+          # Only scrape pods with component: backend or gateway
+          - source_labels:
+              - __meta_kubernetes_pod_label_component
+            action: keep
+            regex: (backend|gateway)
+
+          # Set metrics path to /actuator/prometheus
+          - source_labels:
+              - __meta_kubernetes_pod_annotation_prometheus_io_path
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+            replacement: /actuator/prometheus
+
+          # Get port from annotation or default to container port
+          - source_labels:
+              - __address__
+              - __meta_kubernetes_pod_annotation_prometheus_io_port
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
+
+          # Add labels
+          - source_labels:
+              - __meta_kubernetes_namespace
+            target_label: namespace
+          - source_labels:
+              - __meta_kubernetes_pod_name
+            target_label: pod
+          - source_labels:
+              - __meta_kubernetes_pod_label_app
+            target_label: app
+          - source_labels:
+              - __meta_kubernetes_pod_label_component
+            target_label: component
+          - source_labels:
+              - __meta_kubernetes_pod_label_version
+            target_label: version
+
+      # =================================================================
+      # Loki Metrics
+      # =================================================================
+      - job_name: 'loki'
+        static_configs:
+          - targets:
+              - loki.observability.svc.cluster.local:3100
+
+      # =================================================================
+      # Promtail Metrics
+      # =================================================================
+      - job_name: 'promtail'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - observability
+
+        relabel_configs:
+          - source_labels:
+              - __meta_kubernetes_pod_label_app
+            action: keep
+            regex: promtail
+          - source_labels:
+              - __meta_kubernetes_pod_name
+            target_label: pod
+          - source_labels:
+              - __meta_kubernetes_pod_node_name
+            target_label: node
+
+      # =================================================================
+      # Grafana Metrics
+      # =================================================================
+      - job_name: 'grafana'
+        static_configs:
+          - targets:
+              - grafana.observability.svc.cluster.local:3000

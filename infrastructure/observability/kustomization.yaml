@@ -1,0 +1,36 @@
+---
+# =============================================================================
+# Kustomization - Observability Stack (LGTM)
+# =============================================================================
+# Master kustomization for the complete observability stack:
+# - Loki (Log aggregation)
+# - Grafana (Visualization)
+# - Tempo (Distributed tracing)
+# - Prometheus (Metrics collection)
+#
+# Deploy entire stack:
+#   kubectl apply -k infrastructure/kubernetes/observability
+#
+# Components are deployed in order:
+# 1. Backend services (Loki, Prometheus, Tempo)
+# 2. Log collection (Promtail)
+# 3. Visualization (Grafana with datasources and dashboards)
+# =============================================================================
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: observability
+
+# Ensure namespace exists
+resources:
+  - namespace.yaml
+  - loki
+  - promtail
+  - prometheus
+  - tempo
+  - grafana
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: observability

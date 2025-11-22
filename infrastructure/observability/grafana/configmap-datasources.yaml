@@ -1,0 +1,122 @@
+---
+# =============================================================================
+# Grafana - Datasources Configuration
+# =============================================================================
+# Configures LGTM stack datasources:
+# - Loki for logs
+# - Prometheus for metrics
+# - Tempo for distributed traces
+#
+# Features:
+# - Auto-provisioning on Grafana startup
+# - Direct service-to-service communication within cluster
+# - Prometheus set as default datasource
+# - Trace-to-log and trace-to-metrics correlations enabled
+# =============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: observability
+  labels:
+    app: grafana
+    component: visualization
+data:
+  datasources.yaml: |
+    apiVersion: 1
+
+    datasources:
+      # =======================================================================
+      # Prometheus - Metrics
+      # =======================================================================
+      - name: Prometheus
+        type: prometheus
+        uid: prometheus
+        access: proxy
+        url: http://prometheus.observability.svc.cluster.local:9090
+        isDefault: true
+        editable: false
+        jsonData:
+          timeInterval: 15s
+          queryTimeout: 60s
+          httpMethod: POST
+          # Enable Exemplars for trace correlation
+          exemplarTraceIdDestinations:
+            - name: trace_id
+              datasourceUid: tempo
+
+      # =======================================================================
+      # Loki - Logs
+      # =======================================================================
+      - name: Loki
+        type: loki
+        uid: loki
+        access: proxy
+        url: http://loki.observability.svc.cluster.local:3100
+        editable: false
+        jsonData:
+          maxLines: 1000
+          # Enable derived fields for trace correlation
+          derivedFields:
+            - datasourceUid: tempo
+              matcherRegex: "traceID=(\\w+)"
+              name: TraceID
+              url: "$${__value.raw}"
+
+      # =======================================================================
+      # Tempo - Distributed Tracing
+      # =======================================================================
+      - name: Tempo
+        type: tempo
+        access: proxy
+        url: http://tempo.observability.svc.cluster.local:3200
+        uid: tempo
+        editable: false
+        jsonData:
+          # Enable trace to logs correlation
+          tracesToLogs:
+            datasourceUid: loki
+            filterByTraceID: true
+            filterBySpanID: false
+            mapTagNamesEnabled: true
+            tags:
+              - key: service.name
+                value: service
+              - key: container
+
+          # Enable trace to metrics correlation
+          tracesToMetrics:
+            datasourceUid: prometheus
+            queries:
+              - name: Request rate
+                query: "sum(rate(http_server_requests_seconds_count{$$__tags}[5m]))"
+              - name: Error rate
+                query: "sum(rate(http_server_requests_seconds_count{$$__tags,status=~\"5..\"}[5m]))"
+              - name: Duration
+                query: "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{$$__tags}[5m])) by (le))"
+
+          # Service graph for service map visualization
+          serviceMap:
+            datasourceUid: prometheus
+
+          # Node graph for trace visualization
+          nodeGraph:
+            enabled: true
+
+          # Search configuration
+          search:
+            hide: false
+
+          # Loki search for traces
+          lokiSearch:
+            datasourceUid: loki
+
+      # =======================================================================
+      # TestData - For testing dashboards
+      # =======================================================================
+      - name: TestData
+        type: testdata
+        access: proxy
+        editable: true
+        isDefault: false

@@ -1,0 +1,51 @@
+---
+# =============================================================================
+# Loki - Service
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki
+  namespace: observability
+  labels:
+    app: loki
+    component: logging
+spec:
+  type: ClusterIP
+  selector:
+    app: loki
+    component: logging
+  ports:
+    - name: http
+      port: 3100
+      targetPort: 3100
+      protocol: TCP
+    - name: grpc
+      port: 9095
+      targetPort: 9095
+      protocol: TCP
+
+---
+# =============================================================================
+# Loki - Headless Service (for StatefulSet)
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki-headless
+  namespace: observability
+  labels:
+    app: loki
+    component: logging
+spec:
+  clusterIP: None
+  selector:
+    app: loki
+    component: logging
+  ports:
+    - name: http
+      port: 3100
+      targetPort: 3100
+      protocol: TCP
