@@ -14,11 +14,6 @@ resources:
   - configmap.yaml
   - hpa.yaml
 
-images:
-  - name: teukumunawar/orange-wallet-api-gateway
-    newName: docker.io/teukumunawar/orange-wallet-api-gateway
-    newTag: latest
-
 labels:
   - pairs:
       app.kubernetes.io/name: api-gateway

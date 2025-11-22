@@ -14,11 +14,6 @@ resources:
   - configmap.yaml
   - hpa.yaml
 
-images:
-  - name: teukumunawar/orange-wallet-transaction-service
-    newName: docker.io/teukumunawar/orange-wallet-transaction-service
-    newTag: latest
-
 labels:
   - pairs:
       app.kubernetes.io/name: transaction-service

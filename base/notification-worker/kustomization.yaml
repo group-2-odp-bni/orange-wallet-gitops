@@ -12,11 +12,6 @@ resources:
   - deployment.yaml
   - service.yaml
 
-images:
-  - name: teukumunawar/orange-wallet-notification-worker
-    newName: docker.io/teukumunawar/orange-wallet-notification-worker
-    newTag: latest
-
 labels:
   - pairs:
       app.kubernetes.io/name: notification-worker

@@ -23,12 +23,6 @@ resources:
   - secret-rsa-keys.yaml
   - hpa.yaml
 
-# Images - can be overridden in overlays
-images:
-  - name: teukumunawar/orange-wallet-authentication-service
-    newName: docker.io/teukumunawar/orange-wallet-authentication-service
-    newTag: latest
-
 # Labels applied to all resources
 labels:
   - pairs:

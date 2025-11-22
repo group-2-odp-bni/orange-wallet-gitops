@@ -12,11 +12,6 @@ resources:
   - deployment.yaml
   - service.yaml
 
-images:
-  - name: teukumunawar/orange-wallet-cloud-config-server
-    newName: docker.io/teukumunawar/orange-wallet-cloud-config-server
-    newTag: latest
-
 labels:
   - pairs:
       app.kubernetes.io/name: cloud-config-server

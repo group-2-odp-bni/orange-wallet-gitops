@@ -12,11 +12,6 @@ resources:
   - deployment.yaml
   - service.yaml
 
-images:
-  - name: teukumunawar/orange-wallet-ml-engine
-    newName: docker.io/teukumunawar/orange-wallet-ml-engine
-    newTag: latest
-
 labels:
   - pairs:
       app.kubernetes.io/name: ml-engine
