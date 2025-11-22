@@ -4,8 +4,10 @@ kind: Kustomization
 namespace: cert-manager
 
 resources:
+  - install.yaml
   - cluster-issuer.yaml
   - certificate.yaml
+  - cloudflare-api-token-secret.yaml
 
 labels:
   - pairs:

@@ -22,18 +22,14 @@ spec:
     email: akunfake952@gmail.com
     privateKeySecretRef:
       name: letsencrypt-staging-account-key
+    # Solvers for ACME challenges
     solvers:
-    - http01:
-        ingress:
-          class: nginx
-          podTemplate:
-            metadata:
-              labels:
-                app: cert-manager-acme-http-solver
-            spec:
-              nodeSelector:
-                workload-type: stateless
-
+    - dns01:
+        cloudflare:
+          email: admin@orangebybni.com
+          apiTokenSecretRef:
+            name: cloudflare-api-token-secret
+            key: api-token
 ---
 # =============================================================================
 # ClusterIssuer - Let's Encrypt Production
@@ -57,25 +53,25 @@ metadata:
     app.kubernetes.io/part-of: cert-manager
 spec:
   acme:
+    # Let's Encrypt Production API
     server: https://acme-v02.api.letsencrypt.org/directory
+
+    # Email for certificate expiry notifications
+    # Let's Encrypt will send renewal reminders to this email
     email: akunfake952@gmail.com
+
+    # Secret to store ACME account private key
     privateKeySecretRef:
       name: letsencrypt-prod-account-key
+
+    # Solvers for ACME challenges
     solvers:
-    - http01:
-        ingress:
-          class: nginx
-          podTemplate:
-            metadata:
-              labels:
-                app: cert-manager-acme-http-solver
-            spec:
-              nodeSelector:
-                workload-type: stateless
-              securityContext:
-                runAsNonRoot: true
-                runAsUser: 1000
-                fsGroup: 1000
+    - dns01:
+        cloudflare:
+          email: akunfake952@gmail.com
+          apiTokenSecretRef:
+            name: cloudflare-api-token-secret
+            key: api-token
 
 ---
 # =============================================================================
