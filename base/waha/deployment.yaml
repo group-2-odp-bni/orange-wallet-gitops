@@ -115,7 +115,7 @@ spec:
 
             # Webhook configuration (notification-worker)
             - name: WHATSAPP_HOOK_URL
-              value: "http://notification-worker.orange-wallet.svc.cluster.local:8085/api/webhooks/waha"
+              value: "http://notification-worker.orange-wallet.svc.cluster.local:8080/api/webhooks/waha"
 
             - name: WHATSAPP_HOOK_EVENTS
               value: "message.ack,session.status"
