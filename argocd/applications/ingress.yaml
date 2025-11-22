@@ -7,16 +7,35 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
+
   source:
-    repoURL: 'https://github.com/Capstone-Project-Two/be-capstone-project.git'
-    path: orange-wallet-gitops/infrastructure/ingress
-    targetRevision: HEAD
+    repoURL: https://github.com/group-2-odp-bni/orange-wallet-gitops.git
+    targetRevision: main
+    path: production/cloud-config-server
+
   destination:
-    server: 'https://kubernetes.default.svc'
+    server: https://kubernetes.default.svc
     namespace: orange-wallet
+
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
+      allowEmpty: false
     syncOptions:
       - CreateNamespace=true
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  revisionHistoryLimit: 10
+
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
