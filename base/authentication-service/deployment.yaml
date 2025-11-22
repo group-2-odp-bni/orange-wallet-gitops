@@ -167,12 +167,15 @@ spec:
             # JWT, reCAPTCHA configs removed - now managed via Spring Cloud Config
             # See: spring-cloud-configmap/authentication-service.yml
 
-            # RSA Keys (infrastructure-specific paths - keep as ENV var)
+            # RSA Keys (infrastructure-specific paths - managed via ENV vars)
             # Keys mounted from Secret to /app/keys/
-            - name: ORANGE_RSA_PUBLIC_KEY
+            # Spring Boot relaxed binding: ORANGE_RSA_PUBLICKEY → orange.rsa.publickey
+            # But we need orange.rsa.public-key, so use ORANGE_RSA_PUBLIC-KEY (not possible)
+            # Solution: Use direct property override with Spring syntax
+            - name: ORANGE.RSA.PUBLIC-KEY
               value: "file:/app/keys/public.pem"
 
-            - name: ORANGE_RSA_PRIVATE_KEY
+            - name: ORANGE.RSA.PRIVATE-KEY
               value: "file:/app/keys/private.pem"
 
             # Google reCAPTCHA secret (sensitive - keep in Secret)
