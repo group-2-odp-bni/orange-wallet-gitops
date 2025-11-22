@@ -109,6 +109,10 @@ spec:
                   name: external-api-keys
                   key: waha-webhook-hmac-secret
 
+            # Kafka Consumer Tuning
+            - name: SPRING_KAFKA_LISTENER_CONCURRENCY
+              value: "3"  # Limit concurrent consumers to reduce memory pressure
+
             # JVM Options
             - name: JAVA_OPTS
               value: >-
@@ -126,18 +130,18 @@ spec:
           resources:
             requests:
               cpu: 250m
-              memory: 512Mi
+              memory: 768Mi
             limits:
               cpu: 500m
-              memory: 1Gi
+              memory: 1536Mi  # Increased from 1Gi to prevent OOM
 
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
               port: 8080
-            initialDelaySeconds: 60
+            initialDelaySeconds: 90  # Increased for WhatsApp session init
             periodSeconds: 10
-            timeoutSeconds: 5
+            timeoutSeconds: 10  # Increased to prevent timeout during rebalancing
             successThreshold: 1
             failureThreshold: 3
 
@@ -145,9 +149,9 @@ spec:
             httpGet:
               path: /actuator/health/readiness
               port: 8080
-            initialDelaySeconds: 45
+            initialDelaySeconds: 60  # Increased for safe startup
             periodSeconds: 5
-            timeoutSeconds: 3
+            timeoutSeconds: 5  # Increased for stability
             successThreshold: 1
             failureThreshold: 3
 
@@ -155,9 +159,9 @@ spec:
             httpGet:
               path: /actuator/health/liveness
               port: 8080
-            initialDelaySeconds: 60
+            initialDelaySeconds: 90  # Match liveness initial delay
             periodSeconds: 10
-            timeoutSeconds: 5
+            timeoutSeconds: 10  # Increased for safe startup
             successThreshold: 1
             failureThreshold: 40
 

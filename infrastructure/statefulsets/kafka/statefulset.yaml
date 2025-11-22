@@ -89,15 +89,26 @@ spec:
               value: "true"
 
             - name: KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS
-              value: "0"
+              value: "3000"  # Add delay to reduce rebalance storms
+
+            # JVM Heap Tuning
+            - name: KAFKA_HEAP_OPTS
+              value: "-Xms1024m -Xmx1536m"  # 75% of 2Gi memory limit
+
+            # Log Retention (reduce storage pressure)
+            - name: KAFKA_LOG_RETENTION_HOURS
+              value: "72"  # 3 days retention
+
+            - name: KAFKA_LOG_SEGMENT_BYTES
+              value: "104857600"  # 100MB segments
 
           resources:
             requests:
               cpu: 250m
-              memory: 512Mi
+              memory: 1Gi  # Doubled to prevent OOM
             limits:
               cpu: 500m
-              memory: 1Gi
+              memory: 2Gi  # Doubled to prevent OOM
 
           volumeMounts:
             - name: kafka-data
