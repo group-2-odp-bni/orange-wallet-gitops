@@ -246,8 +246,9 @@ spec:
       # Volumes
       volumes:
         - name: rsa-keys
-          configMap:
-            name: authentication-rsa-keys
+          secret:
+            secretName: authentication-rsa-keys
+            defaultMode: 0400  # Read-only for owner (security best practice)
 
         - name: tmp
           emptyDir: {}

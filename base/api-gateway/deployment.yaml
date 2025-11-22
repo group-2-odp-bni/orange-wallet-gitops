@@ -122,25 +122,8 @@ spec:
             - name: SERVER_COMPRESSION_ENABLED
               value: "true"
 
-            # Security Configuration
-            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
-              valueFrom:
-                configMapKeyRef:
-                  name: api-gateway-config
-                  key: jwt.jwk-set-uri
-
-            # Circuit Breaker Configuration (from configmap)
-            - name: RESILIENCE4J_CIRCUITBREAKER_CONFIGS_DEFAULT_FAILURE_RATE_THRESHOLD
-              valueFrom:
-                configMapKeyRef:
-                  name: api-gateway-config
-                  key: circuit-breaker.failure-rate-threshold
-
-            - name: RESILIENCE4J_CIRCUITBREAKER_CONFIGS_DEFAULT_WAIT_DURATION_IN_OPEN_STATE
-              valueFrom:
-                configMapKeyRef:
-                  name: api-gateway-config
-                  key: circuit-breaker.wait-duration
+            # Security, Circuit Breaker configs removed - now managed via Spring Cloud Config
+            # See: spring-cloud-configmap/api-gateway.yml and api-gateway-prod.yml
 
             # JVM Options (Gateway uses WebFlux - different tuning)
             - name: JAVA_OPTS

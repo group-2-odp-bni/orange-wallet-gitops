@@ -40,42 +40,8 @@ data:
   kafka.topic.user-login: "user.login.events"
 
 ---
-# =============================================================================
-# Authentication Service - RSA Keys ConfigMap
-# =============================================================================
-# RSA public and private keys for JWT token signing.
-#
-# IMPORTANT: These keys should be generated and stored securely.
-# For production, consider using Kubernetes secrets or external secret management.
-#
-# Generate RSA keys:
-#   openssl genrsa -out private.pem 2048
-#   openssl rsa -in private.pem -pubout -out public.pem
-# =============================================================================
-
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: authentication-rsa-keys
-  namespace: orange-wallet
-  labels:
-    app: authentication-service
-    component: configuration
-data:
-  # TODO: Replace with actual RSA keys
-  # These are placeholder keys - generate real keys for production
-  public.pem: |
-    -----BEGIN PUBLIC KEY-----
-    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Z7vJfCKlZjJzKzRkZxB
-    [PLACEHOLDER - REPLACE WITH ACTUAL PUBLIC KEY]
-    -----END PUBLIC KEY-----
-
-  private.pem: |
-    -----BEGIN PRIVATE KEY-----
-    MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDRnu8l8IqVmMnM
-    [PLACEHOLDER - REPLACE WITH ACTUAL PRIVATE KEY]
-    -----END PRIVATE KEY-----
-
+# NOTE: RSA Keys migrated to Kubernetes Secret (secret-rsa-keys.yaml)
+# This improves security as Secrets are base64-encoded and can be encrypted at rest
 ---
 # =============================================================================
 # Kafka Configuration - Shared ConfigMap

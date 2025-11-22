@@ -20,6 +20,7 @@ resources:
   - deployment.yaml
   - service.yaml
   - configmap.yaml
+  - secret-rsa-keys.yaml
   - hpa.yaml
 
 # Images - can be overridden in overlays
