@@ -157,46 +157,24 @@ spec:
                   name: redis-connection
                   key: password
 
-            # Kafka
+            # Kafka (bootstrap config - keep for initial connection)
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               valueFrom:
                 configMapKeyRef:
                   name: kafka-config
                   key: bootstrap-servers
 
-            # JWT Configuration (from RSA keys in configmap)
-            - name: ORANGE_JWT_ACCESS_TOKEN_DURATION
-              valueFrom:
-                configMapKeyRef:
-                  name: authentication-config
-                  key: jwt.access-token-duration
+            # JWT, reCAPTCHA configs removed - now managed via Spring Cloud Config
+            # See: spring-cloud-configmap/authentication-service.yml
 
-            - name: ORANGE_JWT_REFRESH_TOKEN_DURATION
-              valueFrom:
-                configMapKeyRef:
-                  name: authentication-config
-                  key: jwt.refresh-token-duration
-
-            - name: ORANGE_JWT_STATE_TOKEN_DURATION
-              valueFrom:
-                configMapKeyRef:
-                  name: authentication-config
-                  key: jwt.state-token-duration
-
-            # RSA Keys (mounted from configmap)
+            # RSA Keys (mounted from configmap - TODO: migrate to K8s Secret)
             - name: ORANGE_RSA_PUBLIC_KEY
               value: "file:/app/keys/public.pem"
 
             - name: ORANGE_RSA_PRIVATE_KEY
               value: "file:/app/keys/private.pem"
 
-            # Google reCAPTCHA
-            - name: GOOGLE_RECAPTCHA_ENABLED
-              valueFrom:
-                configMapKeyRef:
-                  name: authentication-config
-                  key: recaptcha.enabled
-
+            # Google reCAPTCHA secret (sensitive - keep in Secret)
             - name: GOOGLE_RECAPTCHA_SECRET
               valueFrom:
                 secretKeyRef:
