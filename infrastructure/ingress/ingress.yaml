@@ -67,10 +67,6 @@ metadata:
     nginx.ingress.kubernetes.io/limit-rpm: "1000"
     nginx.ingress.kubernetes.io/limit-connections: "50"
 
-    # Cert-Manager annotations (for automatic TLS certificate)
-    cert-manager.io/cluster-issuer: "letsencrypt-staging"  # Switch to 'letsencrypt-prod' after testing
-    cert-manager.io/acme-challenge-type: "http01"
-
 spec:
   ingressClassName: nginx
 
