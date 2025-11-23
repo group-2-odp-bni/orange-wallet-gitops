@@ -13,9 +13,11 @@ metadata:
     component: configuration
 data:
   # GCP Cloud Storage Configuration
-  gcs.bucket-name: "orange-wallet-users-profiles"
-  gcs.project-id: "orange-wallet"
+  gcs.bucket-name: "orange-wallet-users-profiles-275033978165"
+  gcs.project-id: "orange-wallet-infrastructure"
+  gcs.service-account-email: "orange-wallet-storage@orange-wallet-infrastructure.iam.gserviceaccount.com"
   gcs.signed-url-duration: "60"
+  gcs.enabled: "true"
 
   # Redis Prefixes
   redis.prefix.otp-email: "otp:email:"
