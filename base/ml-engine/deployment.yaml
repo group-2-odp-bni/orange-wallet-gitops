@@ -125,7 +125,7 @@ spec:
               value: "4320"
 
             - name: APP_BASE_URL
-              value: "https://orange-wallet.example.com"
+              value: "https://app.orangebybni.my.id"
 
             # Wallet Webhook Secret
             - name: WALLET_WEBHOOK_SECRET
