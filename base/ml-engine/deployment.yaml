@@ -73,6 +73,10 @@ spec:
             - name: LOG_LEVEL
               value: "INFO"
 
+            # GCP Service Account for GCS access
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /var/secrets/google/service_account.json
+
             # MongoDB Connection
             - name: MONGO_URI
               valueFrom:
@@ -167,6 +171,19 @@ spec:
             timeoutSeconds: 5
             successThreshold: 1
             failureThreshold: 12
+
+          volumeMounts:
+            - name: gcp-service-account
+              mountPath: /var/secrets/google
+              readOnly: true
+
+      volumes:
+        - name: gcp-service-account
+          secret:
+            secretName: gcp-sa-ml-engine
+            items:
+              - key: service_account.json
+                path: service_account.json
 
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
