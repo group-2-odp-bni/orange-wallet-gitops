@@ -11,4 +11,4 @@ resources:
 images:
   - name: teukumunawar/orange-wallet-ml-engine
     newName: docker.io/teukumunawar/orange-wallet-ml-engine
-    newTag: 04a50f5b59e6b3156e009ab5b830ba661c969856 # CI/CD will update this with commit SHA
+    newTag: 054226d511b8e0dd46550d8980607ff25de1bfb1 # CI/CD will update this with commit SHA
