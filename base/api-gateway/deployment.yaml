@@ -125,6 +125,13 @@ spec:
             - name: SERVER_COMPRESSION_ENABLED
               value: "true"
 
+            # BNI Payment Provider API Key (for inquiry/callback endpoints)
+            - name: BNI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: external-api-keys
+                  key: bni-va-api-key
+
             # Security, Circuit Breaker configs removed - now managed via Spring Cloud Config
             # See: spring-cloud-configmap/api-gateway.yml and api-gateway-prod.yml
 
