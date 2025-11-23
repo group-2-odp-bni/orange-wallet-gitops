@@ -11,4 +11,4 @@ resources:
 images:
   - name: teukumunawar/orange-wallet-notification-worker
     newName: docker.io/teukumunawar/orange-wallet-notification-worker
-    newTag: a9fa2f9160af390f8233605d773938f171965e5d # CI/CD will update this with commit SHA
+    newTag: ca8cf43375d22a108eef8f34285ef7178b9b72c0 # CI/CD will update this with commit SHA
