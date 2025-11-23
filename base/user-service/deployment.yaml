@@ -235,11 +235,11 @@ spec:
             httpGet:
               path: /actuator/health/liveness
               port: 8080
-            initialDelaySeconds: 30
+            initialDelaySeconds: 90
             periodSeconds: 10
-            timeoutSeconds: 5
+            timeoutSeconds: 10
             successThreshold: 1
-            failureThreshold: 12
+            failureThreshold: 18
 
           volumeMounts:
             - name: gcp-sa-key
