@@ -388,7 +388,7 @@ spec:
   type: ClusterIP
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
   labels:
     app.kubernetes.io/component: controller
@@ -399,7 +399,6 @@ metadata:
   name: ingress-nginx-controller
   namespace: ingress-nginx
 spec:
-  replicas: 2
   minReadySeconds: 0
   revisionHistoryLimit: 10
   selector:
@@ -407,7 +406,7 @@ spec:
       app.kubernetes.io/component: controller
       app.kubernetes.io/instance: ingress-nginx
       app.kubernetes.io/name: ingress-nginx
-  strategy:
+  updateStrategy:
     rollingUpdate:
       maxUnavailable: 1
     type: RollingUpdate
@@ -464,9 +463,11 @@ spec:
             - containerPort: 80
               name: http
               protocol: TCP
+              hostPort: 80
             - containerPort: 443
               name: https
               protocol: TCP
+              hostPort: 443
             - containerPort: 8443
               name: webhook
               protocol: TCP
@@ -506,6 +507,7 @@ spec:
       dnsPolicy: ClusterFirst
       nodeSelector:
         kubernetes.io/os: linux
+        workload-type: stateless
       serviceAccountName: ingress-nginx
       terminationGracePeriodSeconds: 300
       volumes:
