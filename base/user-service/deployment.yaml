@@ -23,7 +23,7 @@ metadata:
     tier: application
     version: v1
 spec:
-  replicas: 2
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -44,7 +44,7 @@ spec:
         version: v1
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/port: "8082"
+        prometheus.io/port: "8080"
         prometheus.io/path: "/actuator/prometheus"
 
     spec:
@@ -58,18 +58,18 @@ spec:
 
       containers:
         - name: user-service
-          image: asia-southeast2-docker.pkg.dev/orange-wallet/orange-wallet-registry/user-service:latest
+          image: teukumunawar/orange-wallet-user-service:latest
           imagePullPolicy: Always
 
           ports:
             - name: http
-              containerPort: 8082
+              containerPort: 8080
               protocol: TCP
 
           env:
             # Application
             - name: SERVER_PORT
-              value: "8082"
+              value: "8080"
 
             - name: SPRING_APPLICATION_NAME
               value: "user-service"
@@ -116,7 +116,7 @@ spec:
                   name: redis-connection
                   key: port
 
-            - name: SPRING_DATA_REDIS_PASSWORD
+            - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: redis-connection
@@ -178,26 +178,26 @@ spec:
 
           resources:
             requests:
-              cpu: 250m
-              memory: 512Mi
+              cpu: 100m
+              memory: 384Mi
             limits:
-              cpu: 1000m
-              memory: 1Gi
+              cpu: 500m
+              memory: 768Mi
 
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
-              port: 8082
+              port: 8080
             initialDelaySeconds: 90
             periodSeconds: 10
-            timeoutSeconds: 5
+            timeoutSeconds: 10
             successThreshold: 1
-            failureThreshold: 3
+            failureThreshold: 18
 
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
-              port: 8082
+              port: 8080
             initialDelaySeconds: 60
             periodSeconds: 5
             timeoutSeconds: 3
@@ -207,7 +207,7 @@ spec:
           startupProbe:
             httpGet:
               path: /actuator/health/liveness
-              port: 8082
+              port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5
