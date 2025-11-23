@@ -80,6 +80,9 @@ spec:
             - name: TRANSACTION_SERVICE_URL
               value: "http://transaction-service.orange-wallet.svc.cluster.local:8080"
 
+            - name: ML_ENGINE
+              value: "http://ml-engine.orange-wallet.svc.cluster.local:8080"
+
             # Redis Configuration
             - name: REDIS_HOST
               valueFrom:
