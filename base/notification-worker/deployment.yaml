@@ -93,6 +93,28 @@ spec:
                   name: kafka-config
                   key: bootstrap-servers
 
+            # Gmail SMTP Configuration
+            - name: MAIL_HOST
+              value: "smtp.gmail.com"
+
+            - name: MAIL_PORT
+              value: "587"
+
+            - name: MAIL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: gmail-smtp-credentials
+                  key: username
+
+            - name: MAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: gmail-smtp-credentials
+                  key: password
+
+            - name: USER_SERVICE_URL
+              value: "http://user-service.orange-wallet.svc.cluster.local:8080"
+
             # WAHA Configuration
             - name: WAHA_BASE_URL
               value: "http://waha.orange-wallet.svc.cluster.local:3000"
