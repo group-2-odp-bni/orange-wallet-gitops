@@ -129,6 +129,10 @@ spec:
                   name: kafka-config
                   key: bootstrap-servers
 
+            # Spring Cloud Config
+            - name: SPRING_CONFIG_IMPORT
+              value: "configserver:http://cloud-config-server.orange-wallet.svc.cluster.local:8888"
+
             # OAuth2 / JWT Validation
             - name: AUTH_SERVICE_JWK_URI
               value: "http://authentication-service.orange-wallet.svc.cluster.local:8080/oauth2/jwks"

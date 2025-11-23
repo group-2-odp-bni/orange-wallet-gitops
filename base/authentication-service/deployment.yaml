@@ -145,29 +145,19 @@ spec:
                   name: redis-connection
                   key: password
 
-            # Kafka (bootstrap config - keep for initial connection)
-            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+            - name: KAFKA_BOOTSTRAP_SERVERS
               valueFrom:
                 configMapKeyRef:
                   name: kafka-config
                   key: bootstrap-servers
 
-            # JWT, reCAPTCHA configs removed - now managed via Spring Cloud Config
-            # See: spring-cloud-configmap/authentication-service.yml
-
-            # RSA Keys (infrastructure-specific paths - managed via ENV vars)
-            # Keys mounted from Secret to /app/keys/
-            # Spring Boot relaxed binding: ORANGE_RSA_PUBLICKEY → orange.rsa.publickey
-            # But we need orange.rsa.public-key, so use ORANGE_RSA_PUBLIC-KEY (not possible)
-            # Solution: Use direct property override with Spring syntax
             - name: ORANGE.RSA.PUBLIC-KEY
               value: "file:/app/keys/public.pem"
 
             - name: ORANGE.RSA.PRIVATE-KEY
               value: "file:/app/keys/private.pem"
 
-            # Google reCAPTCHA secret (sensitive - keep in Secret)
-            - name: GOOGLE_RECAPTCHA_SECRET
+            - name: RECAPTCHA_SECRET
               valueFrom:
                 secretKeyRef:
                   name: external-api-keys
