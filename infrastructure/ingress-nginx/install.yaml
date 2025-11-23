@@ -464,13 +464,14 @@ spec:
             - containerPort: 80
               name: http
               protocol: TCP
-              hostPort: 80  # Expose on host for GCP Load Balancer
             - containerPort: 443
               name: https
               protocol: TCP
-              hostPort: 443  # Expose on host for GCP Load Balancer
             - containerPort: 8443
               name: webhook
+              protocol: TCP
+            - containerPort: 10254
+              name: healthz
               protocol: TCP
           readinessProbe:
             failureThreshold: 3
