@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-notification-telegram
+  namespace: observability
+data:
+  telegram.yaml: |
+    name: Telegram
+    type: telegram
+    isDefault: true
+    settings:
+      botToken: "8110452001:AAFC8_5eN803X0GZ-aqFFr_XTtJeuurYmqM"
+      chatId: "1552717134"
+      parseMode: "Markdown"

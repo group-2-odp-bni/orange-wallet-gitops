@@ -1,0 +1,16 @@
+apiVersion: integreatly.org/v1alpha1
+kind: GrafanaAlertRule
+metadata:
+  name: error-logs-alert
+  namespace: observability
+spec:
+  dashboardUid: "prometheus"
+  panelId: 1
+  name: "Error Logs Alert"
+  condition: "count_over_time({namespace='default', level='error'}[5m]) > 0"
+  for: "5m"
+  severity: "critical"
+  annotations:
+    summary: "Error logs detected in namespace default"
+  notifications:
+    - channelName: "Telegram"

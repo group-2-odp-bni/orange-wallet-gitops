@@ -16,6 +16,8 @@ resources:
   - configmap-dashboards.yaml
   - ingress.yaml
   - secret.yaml
+  - configmap-telegram.yaml
+  - alert-rule.yaml
 
 labels:
   - pairs:
