@@ -89,6 +89,24 @@ spec:
             - name: GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH
               value: /var/lib/grafana/dashboards/orange-wallet-overview.json
 
+            # Database settings (SQLite tuning to prevent locks)
+            - name: GF_DATABASE_WAL
+              value: "true"
+            - name: GF_DATABASE_CACHE_MODE
+              value: "shared"
+            - name: GF_DATABASE_QUERY_RETRIES
+              value: "10"
+            - name: GF_DATABASE_MAX_IDLE_CONN
+              value: "2"
+            - name: GF_DATABASE_MAX_OPEN_CONN
+              value: "1"
+
+            # Unified Alerting settings (reduce DB contention)
+            - name: GF_UNIFIED_ALERTING_ENABLED
+              value: "true"
+            - name: GF_ALERTING_ENABLED
+              value: "false"
+
           livenessProbe:
             httpGet:
               path: /api/health
@@ -146,10 +164,16 @@ spec:
           configMap:
             name: grafana-dashboard-providers
 
-        # Dashboards ConfigMap
+        # Dashboards ConfigMaps (merged)
         - name: dashboards
-          configMap:
-            name: grafana-dashboards
+          projected:
+            sources:
+              - configMap:
+                  name: grafana-dashboards
+              - configMap:
+                  name: grafana-dashboards-advanced
+              - configMap:
+                  name: grafana-dashboards-infrastructure
 
         # Persistent storage
         - name: storage

@@ -1,0 +1,1274 @@
+---
+# =============================================================================
+# Grafana - Advanced Dashboards Configuration
+# =============================================================================
+# Production-grade dashboards for Orange Wallet observability
+#
+# Dashboards:
+# 1. Application Performance Monitoring (APM) - RED metrics + Golden Signals
+# 2. Business Metrics & Analytics - Transaction insights
+# 3. Distributed Tracing Explorer - Service dependencies & traces
+# 4. Logs Analytics & Troubleshooting - Log patterns & errors
+# 5. Infrastructure & Resource Monitoring - K8s cluster health
+# 6. Database Performance - Connection pools, query performance
+# 7. Security & Audit - Failed logins, blocked IPs, anomalies
+# 8. SLO/SLI Dashboard - Service Level Objectives tracking
+# =============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-advanced
+  namespace: observability
+  labels:
+    app: grafana
+    component: visualization
+    grafana_dashboard: "1"
+data:
+  # ===========================================================================
+  # Dashboard 1: Application Performance Monitoring (APM)
+  # ===========================================================================
+  # RED Metrics: Rate, Errors, Duration
+  # Golden Signals: Latency, Traffic, Errors, Saturation
+  # ===========================================================================
+  apm-dashboard.json: |
+    {
+      "title": "APM - Application Performance Monitoring",
+      "uid": "apm-orange-wallet",
+      "tags": ["apm", "performance", "red-metrics"],
+      "timezone": "browser",
+      "schemaVersion": 38,
+      "version": 1,
+      "refresh": "30s",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "timepicker": {
+        "refresh_intervals": ["10s", "30s", "1m", "5m", "15m"],
+        "time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "7d"]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "row",
+          "title": "Service Health Overview",
+          "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
+          "collapsed": false
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "Total Services",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 4, "w": 3, "x": 0, "y": 1},
+          "targets": [
+            {
+              "expr": "count(up{namespace=\"orange-wallet\"})",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": ["lastNotNull"],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null}
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": 3,
+          "type": "stat",
+          "title": "Services UP",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 4, "w": 3, "x": 3, "y": 1},
+          "targets": [
+            {
+              "expr": "count(up{namespace=\"orange-wallet\"} == 1)",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": ["lastNotNull"],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "red", "value": null},
+                  {"color": "yellow", "value": 6},
+                  {"color": "green", "value": 8}
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": 4,
+          "type": "gauge",
+          "title": "Request Rate (QPS)",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 4, "w": 6, "x": 6, "y": 1},
+          "targets": [
+            {
+              "expr": "sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\"}[5m]))",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": ["lastNotNull"],
+              "fields": "",
+              "values": false
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "unit": "reqps",
+              "min": 0,
+              "max": 1000,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 500},
+                  {"color": "red", "value": 800}
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": 5,
+          "type": "gauge",
+          "title": "Error Rate %",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 4, "w": 6, "x": 12, "y": 1},
+          "targets": [
+            {
+              "expr": "(sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\",status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\"}[5m]))) * 100",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": ["lastNotNull"],
+              "fields": "",
+              "values": false
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "unit": "percent",
+              "min": 0,
+              "max": 10,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 1},
+                  {"color": "red", "value": 5}
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": 6,
+          "type": "gauge",
+          "title": "p95 Latency",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 4, "w": 6, "x": 18, "y": 1},
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{namespace=\"orange-wallet\"}[5m])) by (le))",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": ["lastNotNull"],
+              "fields": "",
+              "values": false
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "unit": "s",
+              "decimals": 3,
+              "min": 0,
+              "max": 2,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 0.5},
+                  {"color": "red", "value": 1}
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": 10,
+          "type": "row",
+          "title": "RED Metrics by Service",
+          "gridPos": {"h": 1, "w": 24, "x": 0, "y": 5},
+          "collapsed": false
+        },
+        {
+          "id": 11,
+          "type": "timeseries",
+          "title": "Request Rate by Service (QPS)",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 6},
+          "targets": [
+            {
+              "expr": "sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\"}[5m])) by (application)",
+              "legendFormat": "{{application}}",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "legend": {
+              "calcs": ["mean", "max", "lastNotNull"],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": false
+              },
+              "unit": "reqps"
+            }
+          }
+        },
+        {
+          "id": 12,
+          "type": "timeseries",
+          "title": "Error Rate by Service (%)",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 6},
+          "targets": [
+            {
+              "expr": "(sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\",status=~\"5..\"}[5m])) by (application) / sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\"}[5m])) by (application)) * 100",
+              "legendFormat": "{{application}}",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "legend": {
+              "calcs": ["mean", "max", "lastNotNull"],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "auto",
+                "spanNulls": false
+              },
+              "unit": "percent",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 1},
+                  {"color": "red", "value": 5}
+                ]
+              }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 13,
+          "type": "timeseries",
+          "title": "Latency Percentiles (p50, p95, p99)",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 14},
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.50, sum(rate(http_server_requests_seconds_bucket{namespace=\"orange-wallet\"}[5m])) by (application, le))",
+              "legendFormat": "{{application}} p50",
+              "refId": "A"
+            },
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{namespace=\"orange-wallet\"}[5m])) by (application, le))",
+              "legendFormat": "{{application}} p95",
+              "refId": "B"
+            },
+            {
+              "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{namespace=\"orange-wallet\"}[5m])) by (application, le))",
+              "legendFormat": "{{application}} p99",
+              "refId": "C"
+            }
+          ],
+          "options": {
+            "legend": {
+              "calcs": ["mean", "max", "lastNotNull"],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 5,
+                "showPoints": "never",
+                "spanNulls": false
+              },
+              "unit": "s",
+              "decimals": 3
+            }
+          }
+        },
+        {
+          "id": 20,
+          "type": "row",
+          "title": "JVM Metrics",
+          "gridPos": {"h": 1, "w": 24, "x": 0, "y": 22},
+          "collapsed": false
+        },
+        {
+          "id": 21,
+          "type": "timeseries",
+          "title": "JVM Heap Memory Usage",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 23},
+          "targets": [
+            {
+              "expr": "jvm_memory_used_bytes{namespace=\"orange-wallet\", area=\"heap\"} / jvm_memory_max_bytes{namespace=\"orange-wallet\", area=\"heap\"}",
+              "legendFormat": "{{application}}",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "legend": {
+              "calcs": ["mean", "max", "lastNotNull"],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10
+              },
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 0.7},
+                  {"color": "red", "value": 0.9}
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": 22,
+          "type": "timeseries",
+          "title": "GC Pause Time",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 23},
+          "targets": [
+            {
+              "expr": "rate(jvm_gc_pause_seconds_sum{namespace=\"orange-wallet\"}[5m])",
+              "legendFormat": "{{application}} - {{action}}",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "legend": {
+              "calcs": ["mean", "max"],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10
+              },
+              "unit": "s",
+              "decimals": 3
+            }
+          }
+        },
+        {
+          "id": 23,
+          "type": "timeseries",
+          "title": "Thread Count",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 31},
+          "targets": [
+            {
+              "expr": "jvm_threads_live_threads{namespace=\"orange-wallet\"}",
+              "legendFormat": "{{application}} live",
+              "refId": "A"
+            },
+            {
+              "expr": "jvm_threads_daemon_threads{namespace=\"orange-wallet\"}",
+              "legendFormat": "{{application}} daemon",
+              "refId": "B"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 5
+              },
+              "unit": "short"
+            }
+          }
+        },
+        {
+          "id": 24,
+          "type": "timeseries",
+          "title": "CPU Usage",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 31},
+          "targets": [
+            {
+              "expr": "rate(process_cpu_usage{namespace=\"orange-wallet\"}[5m])",
+              "legendFormat": "{{application}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10
+              },
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1
+            }
+          }
+        },
+        {
+          "id": 30,
+          "type": "row",
+          "title": "Database & External Dependencies",
+          "gridPos": {"h": 1, "w": 24, "x": 0, "y": 39},
+          "collapsed": false
+        },
+        {
+          "id": 31,
+          "type": "timeseries",
+          "title": "Database Connection Pool Usage",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 40},
+          "targets": [
+            {
+              "expr": "hikaricp_connections_active{namespace=\"orange-wallet\"} / hikaricp_connections_max{namespace=\"orange-wallet\"}",
+              "legendFormat": "{{application}} - {{pool}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10
+              },
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 0.7},
+                  {"color": "red", "value": 0.9}
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": 32,
+          "type": "timeseries",
+          "title": "Database Query Duration (p95)",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 40},
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(hikaricp_connections_usage_seconds_bucket{namespace=\"orange-wallet\"}[5m])) by (application, le))",
+              "legendFormat": "{{application}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10
+              },
+              "unit": "s",
+              "decimals": 3
+            }
+          }
+        },
+        {
+          "id": 33,
+          "type": "stat",
+          "title": "Redis Cache Hit Rate",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 4, "w": 6, "x": 0, "y": 48},
+          "targets": [
+            {
+              "expr": "(sum(rate(cache_gets_total{namespace=\"orange-wallet\", result=\"hit\"}[5m])) / sum(rate(cache_gets_total{namespace=\"orange-wallet\"}[5m]))) * 100",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "unit": "percent",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "red", "value": null},
+                  {"color": "yellow", "value": 70},
+                  {"color": "green", "value": 85}
+                ]
+              }
+            }
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "orientation": "auto"
+          }
+        },
+        {
+          "id": 34,
+          "type": "stat",
+          "title": "Kafka Consumer Lag",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 4, "w": 6, "x": 6, "y": 48},
+          "targets": [
+            {
+              "expr": "sum(kafka_consumer_lag_seconds{namespace=\"orange-wallet\"})",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "unit": "s",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 10},
+                  {"color": "red", "value": 60}
+                ]
+              }
+            }
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "orientation": "auto"
+          }
+        }
+      ]
+    }
+
+  # ===========================================================================
+  # Dashboard 2: Business Metrics & Analytics
+  # ===========================================================================
+  business-metrics.json: |
+    {
+      "title": "Business Metrics & Analytics",
+      "uid": "business-orange-wallet",
+      "tags": ["business", "transactions", "analytics"],
+      "timezone": "browser",
+      "refresh": "1m",
+      "time": {
+        "from": "now-24h",
+        "to": "now"
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "row",
+          "title": "Transaction Overview",
+          "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
+          "collapsed": false
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "Total Transactions (24h)",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 6, "w": 4, "x": 0, "y": 1},
+          "targets": [
+            {
+              "expr": "sum(increase(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/transfers.*\", status=\"200\"}[24h]))",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "blue", "value": null}
+                ]
+              }
+            }
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "orientation": "auto"
+          }
+        },
+        {
+          "id": 3,
+          "type": "stat",
+          "title": "Successful Transactions %",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 6, "w": 4, "x": 4, "y": 1},
+          "targets": [
+            {
+              "expr": "(sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/transfers.*\", status=\"200\"}[1h])) / sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/transfers.*\"}[1h]))) * 100",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "unit": "percent",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "red", "value": null},
+                  {"color": "yellow", "value": 95},
+                  {"color": "green", "value": 99}
+                ]
+              }
+            }
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "orientation": "auto"
+          }
+        },
+        {
+          "id": 4,
+          "type": "stat",
+          "title": "Active Users (1h)",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 6, "w": 4, "x": 8, "y": 1},
+          "targets": [
+            {
+              "expr": "count(count_over_time(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/user/.*\"}[1h]))",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null}
+                ]
+              }
+            }
+          },
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "orientation": "auto"
+          }
+        },
+        {
+          "id": 5,
+          "type": "stat",
+          "title": "New Wallets Created (24h)",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 6, "w": 4, "x": 12, "y": 1},
+          "targets": [
+            {
+              "expr": "sum(increase(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/wallet.*\", method=\"POST\", status=\"201\"}[24h]))",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "purple", "value": null}
+                ]
+              }
+            }
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "orientation": "auto"
+          }
+        },
+        {
+          "id": 6,
+          "type": "stat",
+          "title": "Failed Login Attempts (1h)",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 6, "w": 4, "x": 16, "y": 1},
+          "targets": [
+            {
+              "expr": "sum(increase(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/auth/login.*\", status=~\"4..\"}[1h]))",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 10},
+                  {"color": "red", "value": 50}
+                ]
+              }
+            }
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "orientation": "auto"
+          }
+        },
+        {
+          "id": 7,
+          "type": "stat",
+          "title": "OTP Requests (1h)",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 6, "w": 4, "x": 20, "y": 1},
+          "targets": [
+            {
+              "expr": "sum(increase(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/auth/.*otp.*\"}[1h]))",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "cyan", "value": null}
+                ]
+              }
+            }
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "orientation": "auto"
+          }
+        },
+        {
+          "id": 10,
+          "type": "timeseries",
+          "title": "Transaction Volume Over Time",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 7},
+          "targets": [
+            {
+              "expr": "sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/transfers.*\", status=\"200\"}[5m])) * 60",
+              "legendFormat": "Successful Transactions/min",
+              "refId": "A"
+            },
+            {
+              "expr": "sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/transfers.*\", status=~\"4..|5..\"}[5m])) * 60",
+              "legendFormat": "Failed Transactions/min",
+              "refId": "B"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 20
+              },
+              "unit": "short"
+            }
+          }
+        },
+        {
+          "id": 11,
+          "type": "piechart",
+          "title": "Transaction Types Distribution",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 6, "x": 12, "y": 7},
+          "targets": [
+            {
+              "expr": "sum(increase(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/transfers.*\", method=\"POST\"}[1h])) by (uri)",
+              "legendFormat": "{{uri}}",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "pieType": "donut",
+            "displayLabels": ["name", "percent"],
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "values": ["value", "percent"]
+            }
+          }
+        },
+        {
+          "id": 12,
+          "type": "bargauge",
+          "title": "Top 10 API Endpoints by Traffic",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 6, "x": 18, "y": 7},
+          "targets": [
+            {
+              "expr": "topk(10, sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\"}[5m])) by (uri))",
+              "legendFormat": "{{uri}}",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "orientation": "horizontal",
+            "displayMode": "gradient",
+            "showUnfilled": true
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "continuous-GrYlRd"},
+              "unit": "reqps"
+            }
+          }
+        },
+        {
+          "id": 13,
+          "type": "table",
+          "title": "Endpoint Performance Summary",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 10, "w": 24, "x": 0, "y": 15},
+          "targets": [
+            {
+              "expr": "sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\"}[5m])) by (uri, method)",
+              "format": "table",
+              "instant": true,
+              "refId": "A"
+            },
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{namespace=\"orange-wallet\"}[5m])) by (uri, le))",
+              "format": "table",
+              "instant": true,
+              "refId": "B"
+            },
+            {
+              "expr": "(sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\", status=~\"5..\"}[5m])) by (uri) / sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\"}[5m])) by (uri)) * 100",
+              "format": "table",
+              "instant": true,
+              "refId": "C"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge"
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {"Time": true},
+                "renameByName": {
+                  "Value #A": "RPS",
+                  "Value #B": "p95 Latency",
+                  "Value #C": "Error %"
+                }
+              }
+            }
+          ],
+          "options": {
+            "showHeader": true,
+            "sortBy": [
+              {
+                "displayName": "RPS",
+                "desc": true
+              }
+            ]
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "filterable": true
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {"id": "byName", "options": "Error %"},
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "percent"
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background",
+                      "mode": "gradient"
+                    }
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "thresholds"
+                    }
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {"color": "green", "value": null},
+                        {"color": "yellow", "value": 1},
+                        {"color": "red", "value": 5}
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+
+  # ===========================================================================
+  # Dashboard 3: Logs Analytics & Troubleshooting
+  # ===========================================================================
+  logs-analytics.json: |
+    {
+      "title": "Logs Analytics & Troubleshooting",
+      "uid": "logs-orange-wallet",
+      "tags": ["logs", "troubleshooting", "errors"],
+      "timezone": "browser",
+      "refresh": "30s",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "row",
+          "title": "Log Volume & Patterns",
+          "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
+          "collapsed": false
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "Log Volume by Level",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 1},
+          "targets": [
+            {
+              "expr": "sum(rate({namespace=\"orange-wallet\"} | json | __error__=\"\" [1m])) by (level)",
+              "legendFormat": "{{level}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 30,
+                "stacking": {"mode": "normal"}
+              },
+              "unit": "logs/s"
+            }
+          }
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "Error Logs by Service",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 1},
+          "targets": [
+            {
+              "expr": "sum(rate({namespace=\"orange-wallet\"} | json | level=\"ERROR\" [1m])) by (application)",
+              "legendFormat": "{{application}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10
+              },
+              "unit": "logs/s"
+            }
+          },
+          "alert": {
+            "conditions": [
+              {
+                "evaluator": {
+                  "params": [5],
+                  "type": "gt"
+                },
+                "operator": {
+                  "type": "and"
+                },
+                "query": {
+                  "params": ["A", "5m", "now"]
+                },
+                "reducer": {
+                  "params": [],
+                  "type": "avg"
+                },
+                "type": "query"
+              }
+            ],
+            "frequency": "1m",
+            "handler": 1,
+            "message": "High error rate detected",
+            "name": "High Error Log Rate"
+          }
+        },
+        {
+          "id": 4,
+          "type": "logs",
+          "title": "Recent Error Logs (Live Stream)",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 12, "w": 24, "x": 0, "y": 9},
+          "targets": [
+            {
+              "expr": "{namespace=\"orange-wallet\"} | json | level=\"ERROR\"",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "showTime": true,
+            "showLabels": true,
+            "showCommonLabels": false,
+            "wrapLogMessage": true,
+            "prettifyLogMessage": true,
+            "enableLogDetails": true,
+            "sortOrder": "Descending",
+            "dedupStrategy": "none"
+          }
+        },
+        {
+          "id": 5,
+          "type": "table",
+          "title": "Top 20 Error Messages",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 10, "w": 24, "x": 0, "y": 21},
+          "targets": [
+            {
+              "expr": "topk(20, sum(count_over_time({namespace=\"orange-wallet\"} | json | level=\"ERROR\" [1h])) by (message))",
+              "refId": "A",
+              "instant": true
+            }
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {"Time": true},
+                "renameByName": {
+                  "Value": "Count",
+                  "message": "Error Message"
+                }
+              }
+            }
+          ],
+          "options": {
+            "showHeader": true,
+            "sortBy": [
+              {
+                "displayName": "Count",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 10,
+          "type": "row",
+          "title": "Trace Correlation",
+          "gridPos": {"h": 1, "w": 24, "x": 0, "y": 31},
+          "collapsed": false
+        },
+        {
+          "id": 11,
+          "type": "table",
+          "title": "Requests with Errors (with Trace IDs)",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 10, "w": 24, "x": 0, "y": 32},
+          "targets": [
+            {
+              "expr": "{namespace=\"orange-wallet\"} | json | level=\"ERROR\" | trace_id != \"\"",
+              "refId": "A",
+              "maxLines": 100
+            }
+          ],
+          "transformations": [
+            {
+              "id": "extractFields",
+              "options": {
+                "source": "Line",
+                "format": "json",
+                "replace": false
+              }
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {"Line": true},
+                "renameByName": {
+                  "timestamp": "Time",
+                  "application": "Service",
+                  "trace_id": "Trace ID",
+                  "message": "Error Message"
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "overrides": [
+              {
+                "matcher": {"id": "byName", "options": "Trace ID"},
+                "properties": [
+                  {
+                    "id": "links",
+                    "value": [
+                      {
+                        "title": "View Trace in Tempo",
+                        "url": "/explore?left={\"datasource\":\"tempo\",\"queries\":[{\"query\":\"${__value.raw}\",\"queryType\":\"traceId\"}],\"range\":{\"from\":\"now-1h\",\"to\":\"now\"}}"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
