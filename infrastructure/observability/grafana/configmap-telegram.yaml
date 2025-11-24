@@ -1,0 +1,14 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaContactPoint
+metadata:
+  name: telegram-contact-point # Name of the K8s resource
+  namespace: observability
+spec:
+  instanceSelector:
+    matchLabels:
+      app: "grafana"
+  name: Telegram # Name as it appears inside the Grafana UI
+  type: telegram
+  settings:
+    botToken: "8110452001:AAFC8_5eN803X0GZ-aqFFr_XTtJeuurYmqM"
+    chatId: "1552717134"
