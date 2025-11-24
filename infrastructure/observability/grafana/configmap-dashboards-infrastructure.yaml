@@ -104,43 +104,43 @@ data:
           "id": 5,
           "type": "stat",
           "title": "Avg Trace Duration",
-          "datasource": {"type": "tempo", "uid": "tempo"},
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
           "gridPos": {"h": 4, "w": 6, "x": 6, "y": 14},
           "targets": [
             {
-              "queryType": "metrics",
-              "query": "avg(duration)",
+              "expr": "histogram_quantile(0.5, sum(rate(traces_span_metrics_duration_seconds_bucket[5m])) by (le))",
               "refId": "A"
             }
           ],
           "fieldConfig": {
             "defaults": {
               "color": {"mode": "thresholds"},
-              "unit": "ms",
+              "unit": "s",
+              "decimals": 3,
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
                   {"color": "green", "value": null},
-                  {"color": "yellow", "value": 500},
-                  {"color": "red", "value": 1000}
+                  {"color": "yellow", "value": 0.5},
+                  {"color": "red", "value": 1}
                 ]
               }
             }
           },
           "options": {
             "colorMode": "background",
-            "graphMode": "none"
+            "graphMode": "area"
           }
         },
         {
           "id": 6,
           "type": "stat",
-          "title": "Spans with Errors",
+          "title": "Error Traces (1h)",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
           "gridPos": {"h": 4, "w": 6, "x": 12, "y": 14},
           "targets": [
             {
-              "expr": "sum(increase(tempo_distributor_spans_received_total{status=\"error\"}[1h]))",
+              "expr": "sum(increase(traces_span_metrics_calls_total{status_code=~\"5..\"}[1h]))",
               "refId": "A"
             }
           ],
@@ -152,8 +152,8 @@ data:
                 "mode": "absolute",
                 "steps": [
                   {"color": "green", "value": null},
-                  {"color": "yellow", "value": 100},
-                  {"color": "red", "value": 500}
+                  {"color": "yellow", "value": 10},
+                  {"color": "red", "value": 50}
                 ]
               }
             }
@@ -167,12 +167,11 @@ data:
           "id": 7,
           "type": "stat",
           "title": "Services Traced",
-          "datasource": {"type": "tempo", "uid": "tempo"},
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
           "gridPos": {"h": 4, "w": 6, "x": 18, "y": 14},
           "targets": [
             {
-              "queryType": "metrics",
-              "query": "count(distinct(service.name))",
+              "expr": "count(count by (server) (traces_service_graph_request_total))",
               "refId": "A"
             }
           ],
@@ -208,12 +207,25 @@ data:
           ],
           "fieldConfig": {
             "defaults": {
-              "color": {"mode": "spectrum"},
+              "color": {
+                "mode": "continuous-GrYlRd"
+              },
               "custom": {
                 "drawStyle": "points",
                 "pointSize": 5
               },
               "unit": "ms"
+            }
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
             }
           }
         },
@@ -225,10 +237,11 @@ data:
           "gridPos": {"h": 10, "w": 12, "x": 0, "y": 28},
           "targets": [
             {
-              "queryType": "traceql",
-              "query": "{ } | duration > 1s",
+              "queryType": "search",
+              "query": "",
               "limit": 20,
-              "refId": "A"
+              "refId": "A",
+              "minDuration": "1s"
             }
           ],
           "transformations": [
@@ -303,10 +316,11 @@ data:
           "gridPos": {"h": 10, "w": 12, "x": 12, "y": 28},
           "targets": [
             {
-              "queryType": "traceql",
-              "query": "{ status = error }",
+              "queryType": "search",
+              "query": "",
               "limit": 20,
-              "refId": "A"
+              "refId": "A",
+              "tags": ["error"]
             }
           ],
           "transformations": [
