@@ -133,7 +133,7 @@ spec:
 
             # Persistent storage for plugins and user-created content
             - name: storage
-              mountPath: /var/lib/grafana
+              mountPath: /var/lib/grafana/data
 
       volumes:
         # Datasources ConfigMap
