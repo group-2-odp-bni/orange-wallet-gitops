@@ -1,20 +1,3 @@
----
-# =============================================================================
-# Grafana - Advanced Dashboards Configuration
-# =============================================================================
-# Production-grade dashboards for Orange Wallet observability
-#
-# Dashboards:
-# 1. Application Performance Monitoring (APM) - RED metrics + Golden Signals
-# 2. Business Metrics & Analytics - Transaction insights
-# 3. Distributed Tracing Explorer - Service dependencies & traces
-# 4. Logs Analytics & Troubleshooting - Log patterns & errors
-# 5. Infrastructure & Resource Monitoring - K8s cluster health
-# 6. Database Performance - Connection pools, query performance
-# 7. Security & Audit - Failed logins, blocked IPs, anomalies
-# 8. SLO/SLI Dashboard - Service Level Objectives tracking
-# =============================================================================
-
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -25,12 +8,6 @@ metadata:
     component: visualization
     grafana_dashboard: "1"
 data:
-  # ===========================================================================
-  # Dashboard 1: Application Performance Monitoring (APM)
-  # ===========================================================================
-  # RED Metrics: Rate, Errors, Duration
-  # Golden Signals: Latency, Traffic, Errors, Saturation
-  # ===========================================================================
   apm-dashboard.json: |
     {
       "title": "APM - Application Performance Monitoring",
@@ -700,7 +677,7 @@ data:
           "gridPos": {"h": 6, "w": 4, "x": 0, "y": 1},
           "targets": [
             {
-              "expr": "sum(increase(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/transfers.*\", status=\"200\"}[24h]))",
+              "expr": "sum(increase(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/transfers.*\", status=~\"2..\"}[24h]))",
               "refId": "A"
             }
           ],
@@ -730,7 +707,7 @@ data:
           "gridPos": {"h": 6, "w": 4, "x": 4, "y": 1},
           "targets": [
             {
-              "expr": "(sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/transfers.*\", status=\"200\"}[1h])) / sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/transfers.*\"}[1h]))) * 100",
+              "expr": "(sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/transfers.*\", status=~\"2..\"}[24h])) / sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/transfers.*\"}[24h]))) * 100",
               "refId": "A"
             }
           ],
@@ -884,7 +861,7 @@ data:
           "gridPos": {"h": 8, "w": 12, "x": 0, "y": 7},
           "targets": [
             {
-              "expr": "sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/transfers.*\", status=\"200\"}[5m])) * 60",
+              "expr": "sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/transfers.*\", status=~\"2..\"}[5m])) * 60",
               "legendFormat": "Successful Transactions/min",
               "refId": "A"
             },
@@ -914,8 +891,8 @@ data:
           "gridPos": {"h": 8, "w": 6, "x": 12, "y": 7},
           "targets": [
             {
-              "expr": "sum(increase(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/transfers.*\", method=\"POST\"}[1h])) by (uri)",
-              "legendFormat": "{{uri}}",
+              "expr": "count by (uri, method) (http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\"/api/v1/transfers.*\"})",
+              "legendFormat": "{{method}} {{uri}}",
               "refId": "A"
             }
           ],

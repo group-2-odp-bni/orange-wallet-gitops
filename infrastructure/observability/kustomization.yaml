@@ -29,6 +29,7 @@ resources:
   - promtail
   - prometheus
   - tempo
+  - otel-collector
   - grafana
 
 labels:

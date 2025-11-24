@@ -1,14 +1,3 @@
----
-# =============================================================================
-# Grafana - Infrastructure & Tracing Dashboards
-# =============================================================================
-# Advanced dashboards for:
-# - Distributed Tracing Explorer
-# - Infrastructure & K8s Monitoring
-# - Security & Audit
-# - SLO/SLI Tracking
-# =============================================================================
-
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -19,9 +8,6 @@ metadata:
     component: visualization
     grafana_dashboard: "1"
 data:
-  # ===========================================================================
-  # Dashboard 4: Distributed Tracing Explorer
-  # ===========================================================================
   tracing-explorer.json: |
     {
       "title": "Distributed Tracing Explorer",

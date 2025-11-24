@@ -100,3 +100,18 @@ data:
           - source_labels: [__meta_kubernetes_pod_node_name]
             target_label: node
             action: replace
+
+      - job_name: 'tempo'
+        static_configs:
+          - targets:
+              - tempo.observability.svc.cluster.local:3200
+
+      - job_name: 'loki'
+        static_configs:
+          - targets:
+              - loki.observability.svc.cluster.local:3100
+
+      - job_name: 'grafana'
+        static_configs:
+          - targets:
+              - grafana.observability.svc.cluster.local:3000
