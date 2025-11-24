@@ -34,9 +34,9 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
     nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
 
-    # Rate limiting (relaxed for dashboard)
-    nginx.ingress.kubernetes.io/limit-rps: "50"
-    nginx.ingress.kubernetes.io/limit-connections: "20"
+    # Rate limiting (relaxed for dashboard with parallel API calls)
+    nginx.ingress.kubernetes.io/limit-rps: "200"
+    nginx.ingress.kubernetes.io/limit-connections: "100"
 
     # Timeouts (increased for ArgoCD streaming API endpoints)
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "300"

@@ -35,9 +35,9 @@ metadata:
     # CORS and headers (Cloudflare handles most security headers)
     nginx.ingress.kubernetes.io/enable-cors: "false"
 
-    # Rate limiting (relaxed for dashboard)
-    nginx.ingress.kubernetes.io/limit-rps: "50"
-    nginx.ingress.kubernetes.io/limit-connections: "20"
+    # Rate limiting (relaxed for dashboard with parallel API calls)
+    nginx.ingress.kubernetes.io/limit-rps: "200"
+    nginx.ingress.kubernetes.io/limit-connections: "100"
 
     # Timeouts (increased for long-running queries and dashboard operations)
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "300"
