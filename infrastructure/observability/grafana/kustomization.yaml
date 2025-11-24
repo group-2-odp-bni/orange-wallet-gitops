@@ -9,6 +9,8 @@ kind: Kustomization
 namespace: observability
 
 resources:
+  - https://github.com/grafana/grafana-operator/releases/download/v5.20.0/kustomize-namespace_scoped.yaml  
+
   - deployment.yaml
   - service.yaml
   - configmap-datasources.yaml
@@ -18,8 +20,11 @@ resources:
   - configmap-dashboards-infrastructure.yaml
   - ingress.yaml
   - secret.yaml
+
+
   - configmap-telegram.yaml
   - alert-rule.yaml
+  - notification.yaml
 
 labels:
   - pairs:

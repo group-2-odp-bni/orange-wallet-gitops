@@ -1,16 +1,39 @@
-apiVersion: integreatly.org/v1alpha1
-kind: GrafanaAlertRule
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaAlertRuleGroup
 metadata:
-  name: error-logs-alert
+  name: error-logs-alert-group
   namespace: observability
 spec:
-  dashboardUid: "prometheus"
-  panelId: 1
-  name: "Error Logs Alert"
-  condition: "count_over_time({namespace='default', level='error'}[5m]) > 0"
-  for: "5m"
-  severity: "critical"
-  annotations:
-    summary: "Error logs detected in namespace default"
-  notifications:
-    - channelName: "Telegram"
+  instanceSelector:
+    matchLabels:
+      app: "grafana"
+  resyncPeriod: 5m
+  folderUID: "general"
+  interval: 1m
+  rules:
+    - uid: "error-logs-001"
+      title: "High Error Log Rate"
+      condition: "A"
+      
+      # UPDATED VALUES HERE:
+      noDataState: NoData   # Options: NoData, Alerting, OK, KeepLast
+      execErrState: Error   # Options: Error, Alerting, OK, KeepLast (Changed "Erroring" to "Error")
+
+      labels:
+        severity: "critical"
+        team: "devops"
+      annotations:
+        summary: "High error rate detected"
+        description: "Error rate is > 5% for the last 5 minutes."
+      data:
+        - refId: "A"
+          relativeTimeRange:
+            from: 600
+            to: 0
+          datasourceUid: "prometheus"
+          model:
+            editorMode: "code"
+            expr: "sum(rate(error_logs[5m])) > 5"
+            intervalMs: 1000
+            maxDataPoints: 43200
+            refId: "A"
