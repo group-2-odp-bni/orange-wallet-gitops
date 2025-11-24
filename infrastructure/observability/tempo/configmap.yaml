@@ -72,8 +72,8 @@ data:
       storage:
         path: /var/tempo/generator/wal
         remote_write:
-          - url: http://prometheus.observability.svc.cluster.local:9090/api/v1/write
-            send_exemplars: true
+        - url: http://prometheus.observability.svc.cluster.local:9090/api/v1/write
+          send_exemplars: true
       traces_storage:
         path: /var/tempo/generator/traces
       processor:
