@@ -36,7 +36,7 @@ data:
 
     compactor:
       compaction:
-        block_retention: 168h  # 7 days
+        block_retention: 168h
 
     storage:
       trace:
@@ -58,27 +58,55 @@ data:
         external_labels:
           source: tempo
           cluster: orange-wallet
+
       storage:
         path: /var/tempo/generator/wal
+
       traces_storage:
         path: /var/tempo/generator/traces
+
       processor:
         service_graphs:
           dimensions:
             - "service.namespace"
-          histogram_buckets: [0.1, 0.2, 0.4, 0.8, 1.6, 3.2, 6.4, 12.8]
+          histogram_buckets:
+            - 0.1
+            - 0.2
+            - 0.4
+            - 0.8
+            - 1.6
+            - 3.2
+            - 6.4
+            - 12.8
           max_items: 10000
           wait: 10s
           workers: 10
+
         span_metrics:
           dimensions:
-          - "http.method"
-          - "http.status_code"
-          histogram_buckets: [0.002, 0.004, 0.008, 0.016, 0.032, 0.064, 0.128, 0.256, 0.512, 1.024, 2.048, 4.096, 8.192, 16.384]
+            - "http.method"
+            - "http.status_code"
+          histogram_buckets:
+            - 0.002
+            - 0.004
+            - 0.008
+            - 0.016
+            - 0.032
+            - 0.064
+            - 0.128
+            - 0.256
+            - 0.512
+            - 1.024
+            - 2.048
+            - 4.096
+            - 8.192
+            - 16.384
 
     overrides:
       defaults:
         metrics_generator:
-          processors: [service-graphs, span-metrics]
+          processors:
+            - service-graphs
+            - span-metrics
           collection_interval: 15s
           disable_collection: false
