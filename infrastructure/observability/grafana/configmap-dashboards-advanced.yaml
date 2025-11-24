@@ -700,7 +700,7 @@ data:
           "gridPos": {"h": 6, "w": 4, "x": 0, "y": 1},
           "targets": [
             {
-              "expr": "sum(increase(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/transfers.*\", status=\"200\"}[24h]))",
+              "expr": "sum(increase(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/transfers.*\", status=~\"2..\"}[24h]))",
               "refId": "A"
             }
           ],
@@ -730,7 +730,7 @@ data:
           "gridPos": {"h": 6, "w": 4, "x": 4, "y": 1},
           "targets": [
             {
-              "expr": "(sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/transfers.*\", status=\"200\"}[1h])) / sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/transfers.*\"}[1h]))) * 100",
+              "expr": "(sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/transfers.*\", status=~\"2..\"}[1h])) / sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/transfers.*\"}[1h]))) * 100",
               "refId": "A"
             }
           ],
@@ -884,7 +884,7 @@ data:
           "gridPos": {"h": 8, "w": 12, "x": 0, "y": 7},
           "targets": [
             {
-              "expr": "sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/transfers.*\", status=\"200\"}[5m])) * 60",
+              "expr": "sum(rate(http_server_requests_seconds_count{namespace=\"orange-wallet\", uri=~\".*/transfers.*\", status=~\"2..\"}[5m])) * 60",
               "legendFormat": "Successful Transactions/min",
               "refId": "A"
             },
