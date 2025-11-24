@@ -74,6 +74,8 @@ data:
         remote_write:
           - url: http://prometheus.observability.svc.cluster.local:9090/api/v1/write
             send_exemplars: true
+      traces_storage:
+        path: /var/tempo/generator/traces
       processor:
         service_graphs:
           dimensions:
@@ -92,3 +94,5 @@ data:
       defaults:
         metrics_generator:
           processors: [service-graphs, span-metrics]
+          collection_interval: 15s
+          disable_collection: false
