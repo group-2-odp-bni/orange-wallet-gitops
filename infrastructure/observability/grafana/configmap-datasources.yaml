@@ -110,4 +110,5 @@ data:
         uid: alertmanager
         access: proxy
         url: http://alertmanager.observability.svc.cluster.local:9093
+        implementation: prometheus
         editable: false
