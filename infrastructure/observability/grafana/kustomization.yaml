@@ -20,7 +20,6 @@ resources:
   - configmap-dashboards-infrastructure.yaml
   - ingress.yaml
   - secret.yaml
-  - configmap-dashboards-kubenod.yaml
 
 
   - configmap-telegram.yaml

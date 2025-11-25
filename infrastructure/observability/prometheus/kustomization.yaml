@@ -12,6 +12,10 @@ resources:
   - cadvisor-service.yaml
   - node-exporter.yaml
   - kube-state-metrics.yaml
+  - alertmanager-configmap.yaml
+  - alertmanager-statefulset.yaml
+  - alertmanager-service.yaml
+
 
 labels:
   - pairs:
