@@ -9,6 +9,7 @@ metadata:
 spec:
   serviceName: vault-internal
   replicas: 1
+  podManagementPolicy: OrderedReady
   revisionHistoryLimit: 10
   persistentVolumeClaimRetentionPolicy:
     whenDeleted: Retain
@@ -92,13 +93,20 @@ spec:
       - name: config
         configMap:
           name: vault-config
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      partition: 0
   volumeClaimTemplates:
-  - metadata:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
       name: data
     spec:
       accessModes:
         - ReadWriteOnce
       storageClassName: local-path
+      volumeMode: Filesystem
       resources:
         requests:
           storage: 5Gi
