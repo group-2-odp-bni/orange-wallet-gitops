@@ -9,6 +9,10 @@ metadata:
 spec:
   serviceName: vault-internal
   replicas: 1
+  revisionHistoryLimit: 10
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
   selector:
     matchLabels:
       app.kubernetes.io/name: vault
