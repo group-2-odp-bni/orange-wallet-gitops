@@ -1,0 +1,9 @@
+# Ignore TLS certificates and keys
+*.pem
+*.key
+*.crt
+tls-secret.yaml
+*-secret.yaml
+
+# Ignore any files containing secrets
+*secret*.yaml
