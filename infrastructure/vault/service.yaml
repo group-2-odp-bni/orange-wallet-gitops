@@ -1,0 +1,47 @@
+---
+# Headless service for StatefulSet DNS
+apiVersion: v1
+kind: Service
+metadata:
+  name: vault-internal
+  namespace: vault
+  labels:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/component: server
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+  - name: http
+    port: 8200
+    targetPort: 8200
+  - name: https-internal
+    port: 8201
+    targetPort: 8201
+  selector:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/component: server
+---
+# Regular service for external access
+apiVersion: v1
+kind: Service
+metadata:
+  name: vault
+  namespace: vault
+  labels:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/component: server
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8200
+    targetPort: 8200
+    protocol: TCP
+  - name: https-internal
+    port: 8201
+    targetPort: 8201
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/component: server
