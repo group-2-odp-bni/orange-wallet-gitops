@@ -16,4 +16,4 @@ resources:
 images:
   - name: teukumunawar/orange-wallet-authentication-service
     newName: docker.io/teukumunawar/orange-wallet-authentication-service
-    newTag: a9fa2f9160af390f8233605d773938f171965e5d # CI/CD will update this with commit SHA
+    newTag: 52e0917e6be6dd915d1316cbf72a8fda0f739a1c # CI/CD will update this with commit SHA
