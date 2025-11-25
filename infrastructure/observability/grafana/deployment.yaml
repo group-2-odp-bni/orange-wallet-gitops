@@ -174,8 +174,6 @@ spec:
                   name: grafana-dashboards-advanced
               - configMap:
                   name: grafana-dashboards-infrastructure
-              - configMap:
-                  name: grafana-dashboards-kubenod
 
         # Persistent storage
         - name: storage
